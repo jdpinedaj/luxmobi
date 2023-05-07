@@ -1,0 +1,37 @@
+# data
+dags/data/bike_data/*
+dags/data/charging_station_data/*
+dags/data/parking_data/*
+dags/data/traffic_counter_data/*
+!dags/data/bike_data/.gitkeep
+!dags/data/charging_station_data/.gitkeep
+!dags/data/parking_data/.gitkeep
+!dags/data/traffic_counter_data/.gitkeep
+
+# cache
+__pycache__
+
+# logs
+logs
+*.log
+
+# vscode
+.vscode
+
+# notebooks
+notebooks/*
+!notebooks/.gitkeep
+
+# tmp folders and files
+dags/scripts/piergiorgio/
+ejemplo_javier_mysql/
+data_extraction/
+previous_requirements.txt
+
+# others
+.idea
+.env
+poetry.lock
+pyproject.toml
+
+
