@@ -11,6 +11,10 @@ import pandas as pd
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 
 #######################
 
@@ -63,6 +67,25 @@ def _converting_and_saving_data(
 
 #######################
 
+def test_webdriver(url: str, chromedriver_path: str):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--log-level=DEBUG")
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    chrome_options.add_experimental_option('prefs', prefs)
+    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+    try:
+        driver.get(url)
+        time.sleep(2)
+        print(driver.title)
+    finally:
+        driver.quit()
+
+
+##########
+
 
 def retrieve_bike_data(
     url: str,
@@ -70,6 +93,7 @@ def retrieve_bike_data(
     location_data: str,
     sublocation_data: str,
     file_name: str,
+    columns: list,
 ) -> None:
     """
     This function retrieves data from the JCDecaux API and saves it in a csv file.
@@ -79,6 +103,7 @@ def retrieve_bike_data(
         location_data (str): path to location data
         sublocation_data (str): path to sublocation data
         file_name (str): name of the file
+        columns (list): list of the columns
     Returns:
         None
     """
@@ -93,7 +118,7 @@ def retrieve_bike_data(
         name = el["name"].replace("'", "")
         lat = el["position"]["lat"]
         long = el["position"]["lng"]
-        bike_dtands = el["bike_stands"]
+        bike_stands = el["bike_stands"]
         available_bikes = el["available_bikes"]
         available_bike_stands = el["available_bike_stands"]
 
@@ -102,21 +127,12 @@ def retrieve_bike_data(
         row.append(hour)
         row.append(lat)
         row.append(long)
-        row.append(bike_dtands)
+        row.append(bike_stands)
         row.append(available_bikes)
         row.append(available_bike_stands)
         rows.append(row)
 
-    _converting_and_saving_data(rows, [
-        "name",
-        "date",
-        "hour",
-        "lat",
-        "long",
-        "bike_stands",
-        "available_bikes",
-        "available_bike_stands",
-    ], airflow_home, location_data, sublocation_data, file_name, date, hour)
+    _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
 
 
 def retrieve_charging_station_data(
@@ -125,6 +141,7 @@ def retrieve_charging_station_data(
     location_data: str,
     sublocation_data: str,
     file_name: str,
+    columns: list,
 ) -> None:
     """
     This function retrieves data from the Public.lu API and saves it in a csv file.
@@ -134,6 +151,7 @@ def retrieve_charging_station_data(
         location_data (str): path to location data
         sublocation_data (str): path to sublocation data
         file_name (str): name of the file
+        columns (list): list of the columns
     Returns:
         None
     """
@@ -169,15 +187,7 @@ def retrieve_charging_station_data(
         row.append(available)
         rows.append(row)
 
-    _converting_and_saving_data(rows, [
-        "date",
-        "hour",
-        "lat",
-        "long",
-        "address",
-        "occupied",
-        "available",
-    ], airflow_home, location_data, sublocation_data, file_name, date, hour)
+    _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
 
 
 def retrieve_traffic_counter_data(
@@ -186,8 +196,19 @@ def retrieve_traffic_counter_data(
     location_data: str,
     sublocation_data: str,
     file_name: str,
+    columns: list,
 ) -> None:
     """
+    This function retrieves data from the Cita.lu API and saves it in a csv file.
+    Args:
+        url (str): url of the Public.lu API
+        airflow_home (str): path to airflow home
+        location_data (str): path to location data
+        sublocation_data (str): path to sublocation data
+        file_name (str): name of the file
+        columns (list): list of the columns
+    Returns:
+        None
     """
     date, hour = _now_times()
 
@@ -229,91 +250,81 @@ def retrieve_traffic_counter_data(
         row.append(vehicle_flow_rate)
         rows.append(row)
 
-    _converting_and_saving_data(rows, [
-        "date",
-        "hour",
-        "id",
-        "lat",
-        "long",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ], airflow_home, location_data, sublocation_data, file_name, date, hour)
+    _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
 
 
-def retrieve_parking_data(
-    url: str,
-    airflow_home: str,
-    location_data: str,
-    sublocation_data: str,
-    file_name: str,
-) -> None:
+def retrieve_parking_data(url: str, chromedriver_path: str, airflow_home: str, location_data: str, sublocation_data: str, file_name: str,
+                          columns: list) -> None:
     """
+    This function retrieves data from the parking website of the Luxembourg City and saves it in a csv file.
+    Args:
+        url (str): url of the parking website
+        chromedriver_path (str): path to chromedriver
+        airflow_home (str): path to airflow home
+        location_data (str): path to location data
+        sublocation_data (str): path to sublocation data
+        file_name (str): name of the file
+        columns (list): list of the columns
+    Returns:
+        None
     """
-
     date, hour = _now_times()
 
     chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--log-level=DEBUG")
     prefs = {"profile.managed_default_content_settings.images": 2}
     chrome_options.add_experimental_option('prefs', prefs)
-    driver = webdriver.Chrome("/usr/bin/chromedriver", options=chrome_options)
+    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
 
-    ##################
-    #! Esto esta en un try
+    try:
+        driver.get(url)
+        time.sleep(10)
+        url_elems = driver.find_elements("xpath", "//div[@class='panel-header']")
 
-    driver.get(url)
-    time.sleep(2)
-    urlElems = driver.find_elements_by_xpath("//div[@class='panel-header']")
+        rows = []
+        for father in url_elems:
+            row = []
+            row.append(date)
+            row.append(hour)
+            name = father.find_element("xpath", ".//span[@class='h6 panel-main-title']")
+            b = father.find_element("xpath", ".//div[@class='parking-data']")
+            time.sleep(2)
+            row.append(name.text.replace("â", "a").replace("é", "e"))
 
-    rows = []
-    for father in urlElems:
-        row = []
-        row.append(date)
-        row.append(hour)
-        name = father.find_element_by_xpath(
-            ".//span[@class='h6 panel-main-title']")
-        row.append(name.text)
-        b = father.find_element_by_xpath(".//div[@class='parking-data']")
-        try:
-            if (b.text == 'No data available'):
-                row.append('None')
-                row.append('None')
-                row.append('None')
-                row.append('None')
+            try:
+                if b.text == 'No data available':
+                    row.extend([-1] * 3)
+                    row.extend(['No data available'])
+                    rows.append(row)
+                elif b.text == 'Closed':
+                    row.extend([-1] * 3)
+                    row.extend(['Closed'])
+                    rows.append(row)
+                else:
+                    p = b.text.split()
+                    available = p[0]
+                    total = p[-1].replace('/', '')
+                    occupancy = 100 - ((float(available) / float(total)) * 100)
+                    occupancy = round(occupancy, 2)
+                    ac = father.find_element("xpath", ".//*[local-name() = 'svg' and @width='12']")
+
+                    row.append(available)
+                    row.append(total)
+                    row.append(occupancy)
+                    row.append(ac.get_attribute('class'))
+
+                    rows.append(row)
+
+            except Exception as e:
+                row.extend([-1] * 3)
+                row.extend(['Error'])
                 rows.append(row)
-                continue
-            p = b.text.split()
-            available = p[0]
-            row.append(available)
-            total = p[-1].replace('/', '')
-            row.append(total)
-            #print(p[0],p[-1])
-            row.append(100 - ((float(available) / float(total)) * 100))
 
-            ac = father.find_element_by_xpath(
-                ".//*[local-name() = 'svg' and @width='12']")
-            row.append(ac.get_attribute('class'))
+        
+        _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
 
-            rows.append(row)
-
-        except:
-            row.append('None')
-            row.append('None')
-            row.append('None')
-            row.append('None')
-
-            rows.append(row)
-
-    _converting_and_saving_data(rows, [
-        "date",
-        "hour",
-        "name",
-        "available",
-        "total",
-        "occupancy",
-        "trend",
-    ], airflow_home, location_data, sublocation_data, file_name, date, hour)
-
-    driver.close()
+    finally:
+        driver.quit()
