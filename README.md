@@ -26,9 +26,11 @@ The data sources are the different data providers that are used to feed the data
 - **Data Extraction**:
 The data extraction is performed using Python as main programming language, using libraries such as requests, and selenium with chrome driver and chrome browser.
 <br/>
+
 - **Data Loading**:
 Finally, the data is loaded into a [PostgreSQL](https://www.postgresql.org/) database.
 <br/>
+
 
 The entire pipeline is containerized using [Docker](https://www.docker.com/). and it is orchestrated using [Apache Airflow](https://airflow.apache.org/).
 
