@@ -5,16 +5,19 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+
 # from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python import PythonOperator
+
 # from airflow.providers.postgres.operators.postgres import PostgresOperator
 # from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.task_group import TaskGroup
 from scripts.retrieve_data import (
+    test_webdriver,
     retrieve_bike_data,
     retrieve_charging_station_data,
     retrieve_traffic_counter_data,
-    # retrieve_parking_data,
+    retrieve_parking_data,
 )
 from scripts.write_data_postgres import insert_data_to_table
 
@@ -50,8 +53,11 @@ POSTGRES_PORT = 5432
 POSTGRES_USERNAME = "nipi"
 POSTGRES_PASSWORD = "MobiLab1"
 POSTGRES_DBNAME = "luxmobi"
+CHROMEDRIVER_PATH = "/usr/local/bin/chromedriver"
 URL_BIKE = "https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=4507a17cda9135dd36b8ff13d8a4102ab3aa44a0"
-URL_CHARGING_STATION = "https://data.public.lu/en/datasets/r/22f9d77a-5138-4b02-b315-15f306b77034"
+URL_CHARGING_STATION = (
+    "https://data.public.lu/en/datasets/r/22f9d77a-5138-4b02-b315-15f306b77034"
+)
 URL_PARKING_DATA = "https://www.vdl.lu/en/getting-around/by-car/parkings-and-pr"
 URL_TRAFFIC_COUNTER_DATA_1 = "https://www.cita.lu/info_trafic/datex/trafficstatus_b40"
 URL_TRAFFIC_COUNTER_DATA_2 = "http://www.cita.lu/info_trafic/datex/trafficstatus_a13"
@@ -74,9 +80,9 @@ URL_TRAFFIC_COUNTER_DATA_6 = "https://www.cita.lu/info_trafic/datex/trafficstatu
 #######################
 
 dag = DAG(
-    dag_id="retrieve_write_data",
+    dag_id="retrieve_write_data_v1",
     description="retrieve_write_data",
-    start_date=datetime(2023, 5, 7, 7, 0, 0),
+    start_date=datetime(2023, 5, 23, 9, 0, 0),
     schedule_interval=SCHEDULE_INTERVAL,
     concurrency=5,
     max_active_runs=1,
@@ -94,11 +100,23 @@ start_pipeline = DummyOperator(
     dag=dag,
 )
 
+# # Checking if webdriver is working
+# check_webdriver = PythonOperator(
+#     task_id="check_webdriver",
+#     python_callable=test_webdriver,
+#     op_kwargs={
+#         "url": URL_PARKING_DATA,
+#         "chromedriver_path": CHROMEDRIVER_PATH,
+#     },
+#     dag=dag,
+# )
+
+
 # ? 4.2. Retrieving data
 
 with TaskGroup(
-        "retrieve_data",
-        dag=dag,
+    "retrieve_data",
+    dag=dag,
 ) as retrieve_data:
     bike_data = PythonOperator(
         task_id="bike_data",
@@ -109,6 +127,16 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_BIKE_DATA,
             "file_name": "raw_bike_data",
+            "columns": [
+                "name",
+                "date",
+                "hour",
+                "lat",
+                "long",
+                "bike_stands",
+                "available_bikes",
+                "available_bike_stands",
+            ],
         },
         dag=dag,
     )
@@ -122,6 +150,15 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_CHARGING_STATION_DATA,
             "file_name": "raw_charging_station_data",
+            "columns" : [
+        "date",
+        "hour",
+        "lat",
+        "long",
+        "address",
+        "occupied",
+        "available",
+    ]
         },
         dag=dag,
     )
@@ -135,6 +172,18 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_1",
+            "columns": [
+        "date",
+        "hour",
+        "id",
+        "lat",
+        "long",
+        "road",
+        "direction",
+        "percentage",
+        "speed",
+        "vehicle_flow_rate",
+    ]
         },
         dag=dag,
     )
@@ -148,6 +197,18 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_2",
+            "columns": [
+        "date",
+        "hour",
+        "id",
+        "lat",
+        "long",
+        "road",
+        "direction",
+        "percentage",
+        "speed",
+        "vehicle_flow_rate",
+    ]
         },
         dag=dag,
     )
@@ -161,6 +222,18 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_3",
+            "columns": [
+        "date",
+        "hour",
+        "id",
+        "lat",
+        "long",
+        "road",
+        "direction",
+        "percentage",
+        "speed",
+        "vehicle_flow_rate",
+    ]
         },
         dag=dag,
     )
@@ -174,6 +247,18 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_4",
+            "columns": [
+        "date",
+        "hour",
+        "id",
+        "lat",
+        "long",
+        "road",
+        "direction",
+        "percentage",
+        "speed",
+        "vehicle_flow_rate",
+    ]
         },
         dag=dag,
     )
@@ -187,6 +272,18 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_5",
+            "columns": [
+        "date",
+        "hour",
+        "id",
+        "lat",
+        "long",
+        "road",
+        "direction",
+        "percentage",
+        "speed",
+        "vehicle_flow_rate",
+    ]
         },
         dag=dag,
     )
@@ -200,30 +297,51 @@ with TaskGroup(
             "location_data": LOCATION_DATA,
             "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_6",
+            "columns": [
+        "date",
+        "hour",
+        "id",
+        "lat",
+        "long",
+        "road",
+        "direction",
+        "percentage",
+        "speed",
+        "vehicle_flow_rate",
+    ]
         },
         dag=dag,
     )
 
-    # parking_data = PythonOperator(
-    #     task_id="parking_data",
-    #     python_callable=retrieve_parking_data,
-    #     op_kwargs={
-    #         "url": URL_PARKING_DATA,
-    #         "airflow_home": AIRFLOW_HOME,
-    #         "location_data": LOCATION_DATA,
-    #         "sublocation_data": SUBLOCATION_PARKING_DATA,
-    #         "file_name": "raw_parking_data",
-    #     },
-    #     dag=dag,
-    # )
+    parking_data = PythonOperator(
+        task_id="parking_data",
+        python_callable=retrieve_parking_data,
+        op_kwargs={
+            "url": URL_PARKING_DATA,
+            "chromedriver_path": CHROMEDRIVER_PATH,
+            "airflow_home": AIRFLOW_HOME,
+            "location_data": LOCATION_DATA,
+            "sublocation_data": SUBLOCATION_PARKING_DATA,
+            "file_name": "raw_parking_data",
+            "columns": [
+                "date",
+                "hour",
+                "name",
+                "available",
+                "total",
+                "occupancy",
+                "trend",
+            ],
+        },
+        dag=dag,
+    )
 
 # ? 4.3. Writing data to database
 
 with TaskGroup(
-        "write_data",
-        dag=dag,
+    "write_data",
+    dag=dag,
 ) as write_data:
-
     write_bike_data = PythonOperator(
         task_id="write_bike_data",
         python_callable=insert_data_to_table,
@@ -236,9 +354,8 @@ with TaskGroup(
             "db_name": POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "bike",
-            "columns_table":
-            "name, date, hour, lat, long, total_bike_stand, bike_available, bike_stands_available",
-            "data_type": "bike"
+            "columns_table": "name, date, hour, lat, long, total_bike_stand, bike_available, bike_stands_available",
+            "data_type": "bike",
         },
         dag=dag,
     )
@@ -376,6 +493,24 @@ with TaskGroup(
         dag=dag,
     )
 
+    write_parking_data = PythonOperator(
+        task_id="write_parking_data",
+        python_callable=insert_data_to_table,
+        op_kwargs={
+            "postgres_conn_id": POSTGRESS_CONN_ID,
+            "airflow_home": AIRFLOW_HOME,
+            "location_data": LOCATION_DATA,
+            "sublocation_data": SUBLOCATION_PARKING_DATA,
+            "file_name": "raw_parking_data",
+            "db_name": POSTGRES_DBNAME,
+            "schema_name": "raw",
+            "table_name": "parking",
+            "columns_table": "date, hour, name, available, total, occupancy, trend",
+            "data_type": "parking",
+        },
+        dag=dag,
+    )
+
     bike_data >> write_bike_data
     charging_station_data >> write_charging_station_data
     traffic_counter_data_1 >> write_traffic_counter_data_1
@@ -384,6 +519,7 @@ with TaskGroup(
     traffic_counter_data_4 >> write_traffic_counter_data_4
     traffic_counter_data_5 >> write_traffic_counter_data_5
     traffic_counter_data_6 >> write_traffic_counter_data_6
+    parking_data >> write_parking_data
 
 # ? 4.4. Finishing pipeline
 
@@ -396,6 +532,7 @@ finish_pipeline = DummyOperator(
 ##! 5. Setting up dependencies
 #######################
 
+# start_pipeline >> check_webdriver >> retrieve_data
 start_pipeline >> retrieve_data
 
 retrieve_data >> write_data
