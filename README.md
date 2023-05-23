@@ -1,8 +1,40 @@
-# Run Airflow on Docker
+# Data Portal
 
-![badge1](https://img.shields.io/badge/language-Python-01B0F0.svg)
+![badge1](https://img.shields.io/badge/language-Python-blue.svg)
+![badge2](https://img.shields.io/badge/orchestrator-Airflow-brightgreen.svg)
+![badge3](https://img.shields.io/badge/containerization-Docker-red.svg)
 
-This quick-start guide will allow you to quickly start Airflow with CeleryExecutor in Docker. This is the fastest way to start Airflow.
+## General
+
+This repository is associated to the data portal of the University of Luxembourg managed by the [MobiLab](https://mobilab.lu/) research group.
+
+
+## Framework
+
+The data portal is based on the following framework:
+
+![Schema](./readme-resources/schema.png)
+
+- **Data sources**:
+The data sources are the different data providers that are used to feed the data portal. 
+    - *Bike data*: The bike data is provided by the [jcdecaux](https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=4507a17cda9135dd36b8ff13d8a4102ab3aa44a0) service.
+    - *Charging stations data*: The charging stations data is provided by the [data public lu](https://data.public.lu) service.
+    - *Traffic counters data*: The traffic counters data is provided by the [cita lu](http://www.cita.lu) service.
+    - *Parking data*: The parking data is provided by the [Ville de Luxembourg](https://www.vdl.lu) website.
+    ... 
+    <br/>
+- **Data Extraction**:
+The data extraction is performed using Python as main programming language, using libraries such as requests, and selenium with chrome driver and chrome browser.
+<br/>
+- **Data Loading**:
+Finally, the data is loaded into a [PostgreSQL](https://www.postgresql.org/) database.
+<br/>
+
+The entire pipeline is containerized using [Docker](https://www.docker.com/). and it is orchestrated using [Apache Airflow](https://airflow.apache.org/).
+
+
+
+
 
 ## Running Airflow on Docker
 
@@ -72,11 +104,6 @@ If you want to install python requirements to the airflow container after the in
 - adding the requirements to the requirements.txt file
 - rebuilding the image docker-compose build by running `docker-compose build`
 - restarting the containers by running `docker-compose up -d`
-
-<!-- image: ${AIRFLOW_IMAGE_NAME:-extending_airflow:latest}  -->
-<!-- AND   -->
-<!-- docker build . --tag extending_airflow:latest -->
-<!-- ? -->
 
 ### 8. Accessing the environment via a browser using the web interface
 
