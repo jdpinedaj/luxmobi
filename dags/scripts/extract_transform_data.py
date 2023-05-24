@@ -87,7 +87,7 @@ def test_webdriver(url: str, chromedriver_path: str):
 ##########
 
 
-def retrieve_bike_data(
+def extraction_bike_data(
     url: str,
     airflow_home: str,
     location_data: str,
@@ -96,7 +96,7 @@ def retrieve_bike_data(
     columns: list,
 ) -> None:
     """
-    This function retrieves data from the JCDecaux API and saves it in a csv file.
+    This function extracts data from the JCDecaux API and saves it in a csv file.
     Args:
         url (str): url of the JCDecaux API
         airflow_home (str): path to airflow home
@@ -135,7 +135,7 @@ def retrieve_bike_data(
     _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
 
 
-def retrieve_charging_station_data(
+def extraction_charging_station_data(
     url: str,
     airflow_home: str,
     location_data: str,
@@ -144,7 +144,7 @@ def retrieve_charging_station_data(
     columns: list,
 ) -> None:
     """
-    This function retrieves data from the Public.lu API and saves it in a csv file.
+    This function extracts data from the Public.lu API and saves it in a csv file.
     Args:
         url (str): url of the Public.lu API
         airflow_home (str): path to airflow home
@@ -190,7 +190,7 @@ def retrieve_charging_station_data(
     _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
 
 
-def retrieve_traffic_counter_data(
+def extraction_traffic_counter_data(
     url: str,
     airflow_home: str,
     location_data: str,
@@ -199,7 +199,7 @@ def retrieve_traffic_counter_data(
     columns: list,
 ) -> None:
     """
-    This function retrieves data from the Cita.lu API and saves it in a csv file.
+    This function extracts data from the Cita.lu API and saves it in a csv file.
     Args:
         url (str): url of the Public.lu API
         airflow_home (str): path to airflow home
@@ -253,10 +253,10 @@ def retrieve_traffic_counter_data(
     _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
 
 
-def retrieve_parking_data(url: str, chromedriver_path: str, airflow_home: str, location_data: str, sublocation_data: str, file_name: str,
+def extraction_parking_data(url: str, chromedriver_path: str, airflow_home: str, location_data: str, sublocation_data: str, file_name: str,
                           columns: list) -> None:
     """
-    This function retrieves data from the parking website of the Luxembourg City and saves it in a csv file.
+    This function extracts data from the parking website of the Luxembourg City and saves it in a csv file.
     Args:
         url (str): url of the parking website
         chromedriver_path (str): path to chromedriver
@@ -292,7 +292,7 @@ def retrieve_parking_data(url: str, chromedriver_path: str, airflow_home: str, l
             name = father.find_element("xpath", ".//span[@class='h6 panel-main-title']")
             b = father.find_element("xpath", ".//div[@class='parking-data']")
             time.sleep(2)
-            row.append(name.text.replace("â", "a").replace("é", "e"))
+            row.append(name.text.replace("â", "a").replace("é", "e").replace("'", ""))
 
             try:
                 if b.text == 'No data available':
