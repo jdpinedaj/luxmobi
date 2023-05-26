@@ -37,13 +37,34 @@ Finally, the data is loaded into a [PostgreSQL](https://www.postgresql.org/) dat
 <br/>
 
 - **DB Management**:
-The management of the database is to be defined... 
+[Ngrok](https://ngrok.com/) is used to expose the PostgreSQL database to the internet.
+Then, [DBeaver](https://dbeaver.io/) is used to manage the database, even though it can be managed using other tools such as [DataGrip](https://www.jetbrains.com/datagrip/).
 <br/>
 
 The entire pipeline is containerized using [Docker](https://www.docker.com/). and it is orchestrated using [Apache Airflow](https://airflow.apache.org/).
 Finally, all the resources are stored in a [GitHub](https://github.com/jdpinedaj/luxmobi) repository.
 
 
+
+<!-- ---
+## Connecting to the PostgreSQL database
+
+Using ngrok to expose the PostgreSQL database to the internet:
+
+```
+ngrok tcp 5432
+```
+
+Then, use the host and port provided by ngrok to connect to the database using DBeaver or any other tool.
+
+Example of ngrok output:
+![ngrok output](readme-resources/ngrok_example.jpeg)
+
+Example of DBeaver connection:
+![DBeaver connection](readme-resources/dbeaver_example.png)
+
+
+ -->
 
 ---
 
