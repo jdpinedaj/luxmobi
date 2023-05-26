@@ -110,11 +110,20 @@ with TaskGroup(
         dag=dag,
     )
 
+    create_gpt_table = PostgresOperator(
+        task_id="create_gpt_table",
+        postgres_conn_id="postgres_default",
+        sql="sql/creation_tables/create_gpt_table.sql",
+        params={"table_name": "luxmobi.raw.gpt"},
+        dag=dag,
+    )
+
     create_public_schema >> [
         create_bike_table,
         create_charging_station_table,
         create_parking_table,
         create_traffic_counter_table,
+        create_gpt_table,
     ]
 
 # ? 4.5. Finishing pipeline
