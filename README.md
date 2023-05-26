@@ -21,7 +21,7 @@ The data sources are the different data providers that are used to feed the data
     - `Charging stations data`: The charging stations data is provided by the [data public lu](https://data.public.lu) service.
     - `Traffic counters data`: The traffic counters data is provided by the [cita lu](http://www.cita.lu) service.
     - `Parking data`: The parking data is provided by the [Ville de Luxembourg](https://www.vdl.lu) website.
-    - `Google popular Times data`: The Google popular Times data is provided by the [Google Maps](https://www.google.com/maps) service.
+    - `Google Popular Times data`: The Google popular Times data is provided by the [Google Maps](https://www.google.com/maps) service.
 <br/>
      
 - **Data Extraction**:
