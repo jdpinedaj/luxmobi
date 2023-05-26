@@ -33,6 +33,8 @@ previous_requirements.txt
 .env
 poetry.lock
 pyproject.toml
-readme-resources/framework.excalidraw
+readme-resources/*
+!readme-resources/framework.png
+
 
 
