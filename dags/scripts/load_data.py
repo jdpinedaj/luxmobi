@@ -30,7 +30,7 @@ def insert_data_to_table(
         location_data (str): path to location data
         sublocation_data (str): path to sublocation data
         file_name (str): name of the file
-        data_type (str): type of data being inserted. Possible values: 'bike', 'charging_station', 'traffic_counter', 'parking' # TODO!!!!
+        data_type (str): type of data being inserted. Possible values: 'bike', 'charging_station', 'traffic_counter', 'parking', 'gpt'
     Returns:
         None
     """
@@ -98,7 +98,19 @@ def insert_data_to_table(
 
                     sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{name}\', \'{available}\', \'{total}\', \'{occupancy}\', \'{trend}\')'
 
+                elif data_type == 'gpt':
+                    date = values[0]
+                    hour = values[1]
+                    city = values[2]
+                    id = values[3]
+                    rating = values[4]
+                    rating_n = values[5]
+                    popularity = values[6]
+                    live = values[7]
+                    duration = values[8]
 
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{city}\', \'{id}\', \'{rating}\', \'{rating_n}\', \'{popularity}\', \'{live}\', \'{duration}\')'
+                    
                 else:
                     raise ValueError("Invalid data type")
 
