@@ -3,10 +3,13 @@ dags/data/bike_data/*
 dags/data/charging_station_data/*
 dags/data/parking_data/*
 dags/data/traffic_counter_data/*
+dags/data/gpt_data/*
+
 !dags/data/bike_data/.gitkeep
 !dags/data/charging_station_data/.gitkeep
 !dags/data/parking_data/.gitkeep
 !dags/data/traffic_counter_data/.gitkeep
+!dags/data/gpt_data/.gitkeep
 
 # cache
 __pycache__

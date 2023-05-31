@@ -18,6 +18,7 @@ from scripts.extract_transform_data import (
     extraction_charging_station_data,
     extraction_traffic_counter_data,
     extraction_parking_data,
+    extraction_gpt_data,
 )
 from scripts.load_data import insert_data_to_table
 
@@ -39,14 +40,15 @@ default_args = {
 
 # It is possible to store all those variables as "Variables" within airflow
 # SCHEDULE_INTERVAL: To see the format, check https://crontab.guru/
-SCHEDULE_INTERVAL = "0 * * * *"
-# SCHEDULE_INTERVAL = "@once"
+# SCHEDULE_INTERVAL = "0 * * * *"
+SCHEDULE_INTERVAL = "@once"
 AIRFLOW_HOME = os.getenv("AIRFLOW_HOME")
 LOCATION_DATA = "/dags/data/"
 SUBLOCATION_BIKE_DATA = "bike_data/"
 SUBLOCATION_CHARGING_STATION_DATA = "charging_station_data/"
 SUBLOCATION_TRAFFIC_COUNTER_DATA = "traffic_counter_data/"
 SUBLOCATION_PARKING_DATA = "parking_data/"
+SUBLOCATION_GPT_DATA = "gpt_data/"
 POSTGRESS_CONN_ID = "postgres_default"
 POSTGRES_ADDRESS = "host.docker.internal"
 POSTGRES_PORT = 5432
@@ -65,6 +67,7 @@ URL_TRAFFIC_COUNTER_DATA_3 = "http://www.cita.lu/info_trafic/datex/trafficstatus
 URL_TRAFFIC_COUNTER_DATA_4 = "http://www.cita.lu/info_trafic/datex/trafficstatus_a6"
 URL_TRAFFIC_COUNTER_DATA_5 = "https://www.cita.lu/info_trafic/datex/trafficstatus_a4"
 URL_TRAFFIC_COUNTER_DATA_6 = "https://www.cita.lu/info_trafic/datex/trafficstatus_a3"
+URL_GPT_DATA = "https://www.vdl.lu/en/getting-around/by-car/parkings-and-pr"
 
 #######################
 ##! 3. Instantiate a DAG
@@ -132,200 +135,226 @@ with TaskGroup(
         dag=dag,
     )
 
-    charging_station_data = PythonOperator(
-        task_id="charging_station_data",
-        python_callable=extraction_charging_station_data,
-        op_kwargs={
-            "url": URL_CHARGING_STATION,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_CHARGING_STATION_DATA,
-            "file_name": "raw_charging_station_data",
-            "columns" : [
-        "date",
-        "hour",
-        "lat",
-        "long",
-        "address",
-        "occupied",
-        "available",
-    ]
-        },
-        dag=dag,
-    )
+    # charging_station_data = PythonOperator(
+    #     task_id="charging_station_data",
+    #     python_callable=extraction_charging_station_data,
+    #     op_kwargs={
+    #         "url": URL_CHARGING_STATION,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_CHARGING_STATION_DATA,
+    #         "file_name": "raw_charging_station_data",
+    #         "columns" : [
+    #     "date",
+    #     "hour",
+    #     "lat",
+    #     "long",
+    #     "address",
+    #     "occupied",
+    #     "available",
+    # ]
+    #     },
+    #     dag=dag,
+    # )
 
-    traffic_counter_data_1 = PythonOperator(
-        task_id="traffic_counter_data_1",
-        python_callable=extraction_traffic_counter_data,
-        op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_1,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_1",
-            "columns": [
-        "date",
-        "hour",
-        "id",
-        "lat",
-        "long",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
-        },
-        dag=dag,
-    )
+    # traffic_counter_data_1 = PythonOperator(
+    #     task_id="traffic_counter_data_1",
+    #     python_callable=extraction_traffic_counter_data,
+    #     op_kwargs={
+    #         "url": URL_TRAFFIC_COUNTER_DATA_1,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_1",
+    #         "columns": [
+    #     "date",
+    #     "hour",
+    #     "id",
+    #     "lat",
+    #     "long",
+    #     "road",
+    #     "direction",
+    #     "percentage",
+    #     "speed",
+    #     "vehicle_flow_rate",
+    # ]
+    #     },
+    #     dag=dag,
+    # )
 
-    traffic_counter_data_2 = PythonOperator(
-        task_id="traffic_counter_data_2",
-        python_callable=extraction_traffic_counter_data,
-        op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_2,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_2",
-            "columns": [
-        "date",
-        "hour",
-        "id",
-        "lat",
-        "long",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
-        },
-        dag=dag,
-    )
+    # traffic_counter_data_2 = PythonOperator(
+    #     task_id="traffic_counter_data_2",
+    #     python_callable=extraction_traffic_counter_data,
+    #     op_kwargs={
+    #         "url": URL_TRAFFIC_COUNTER_DATA_2,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_2",
+    #         "columns": [
+    #     "date",
+    #     "hour",
+    #     "id",
+    #     "lat",
+    #     "long",
+    #     "road",
+    #     "direction",
+    #     "percentage",
+    #     "speed",
+    #     "vehicle_flow_rate",
+    # ]
+    #     },
+    #     dag=dag,
+    # )
 
-    traffic_counter_data_3 = PythonOperator(
-        task_id="traffic_counter_data_3",
-        python_callable=extraction_traffic_counter_data,
-        op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_3,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_3",
-            "columns": [
-        "date",
-        "hour",
-        "id",
-        "lat",
-        "long",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
-        },
-        dag=dag,
-    )
+    # traffic_counter_data_3 = PythonOperator(
+    #     task_id="traffic_counter_data_3",
+    #     python_callable=extraction_traffic_counter_data,
+    #     op_kwargs={
+    #         "url": URL_TRAFFIC_COUNTER_DATA_3,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_3",
+    #         "columns": [
+    #     "date",
+    #     "hour",
+    #     "id",
+    #     "lat",
+    #     "long",
+    #     "road",
+    #     "direction",
+    #     "percentage",
+    #     "speed",
+    #     "vehicle_flow_rate",
+    # ]
+    #     },
+    #     dag=dag,
+    # )
 
-    traffic_counter_data_4 = PythonOperator(
-        task_id="traffic_counter_data_4",
-        python_callable=extraction_traffic_counter_data,
-        op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_4,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_4",
-            "columns": [
-        "date",
-        "hour",
-        "id",
-        "lat",
-        "long",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
-        },
-        dag=dag,
-    )
+    # traffic_counter_data_4 = PythonOperator(
+    #     task_id="traffic_counter_data_4",
+    #     python_callable=extraction_traffic_counter_data,
+    #     op_kwargs={
+    #         "url": URL_TRAFFIC_COUNTER_DATA_4,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_4",
+    #         "columns": [
+    #     "date",
+    #     "hour",
+    #     "id",
+    #     "lat",
+    #     "long",
+    #     "road",
+    #     "direction",
+    #     "percentage",
+    #     "speed",
+    #     "vehicle_flow_rate",
+    # ]
+    #     },
+    #     dag=dag,
+    # )
 
-    traffic_counter_data_5 = PythonOperator(
-        task_id="traffic_counter_data_5",
-        python_callable=extraction_traffic_counter_data,
-        op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_5,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_5",
-            "columns": [
-        "date",
-        "hour",
-        "id",
-        "lat",
-        "long",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
-        },
-        dag=dag,
-    )
+    # traffic_counter_data_5 = PythonOperator(
+    #     task_id="traffic_counter_data_5",
+    #     python_callable=extraction_traffic_counter_data,
+    #     op_kwargs={
+    #         "url": URL_TRAFFIC_COUNTER_DATA_5,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_5",
+    #         "columns": [
+    #     "date",
+    #     "hour",
+    #     "id",
+    #     "lat",
+    #     "long",
+    #     "road",
+    #     "direction",
+    #     "percentage",
+    #     "speed",
+    #     "vehicle_flow_rate",
+    # ]
+    #     },
+    #     dag=dag,
+    # )
 
-    traffic_counter_data_6 = PythonOperator(
-        task_id="traffic_counter_data_6",
-        python_callable=extraction_traffic_counter_data,
-        op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_6,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_6",
-            "columns": [
-        "date",
-        "hour",
-        "id",
-        "lat",
-        "long",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
-        },
-        dag=dag,
-    )
+    # traffic_counter_data_6 = PythonOperator(
+    #     task_id="traffic_counter_data_6",
+    #     python_callable=extraction_traffic_counter_data,
+    #     op_kwargs={
+    #         "url": URL_TRAFFIC_COUNTER_DATA_6,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_6",
+    #         "columns": [
+    #     "date",
+    #     "hour",
+    #     "id",
+    #     "lat",
+    #     "long",
+    #     "road",
+    #     "direction",
+    #     "percentage",
+    #     "speed",
+    #     "vehicle_flow_rate",
+    # ]
+    #     },
+    #     dag=dag,
+    # )
 
-    parking_data = PythonOperator(
-        task_id="parking_data",
-        python_callable=extraction_parking_data,
+    # parking_data = PythonOperator(
+    #     task_id="parking_data",
+    #     python_callable=extraction_parking_data,
+    #     op_kwargs={
+    #         "url": URL_PARKING_DATA,
+    #         "chromedriver_path": CHROMEDRIVER_PATH,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_PARKING_DATA,
+    #         "file_name": "raw_parking_data",
+    #         "columns": [
+    #             "date",
+    #             "hour",
+    #             "name",
+    #             "available",
+    #             "total",
+    #             "occupancy",
+    #             "trend",
+    #         ],
+    #     },
+    #     dag=dag,
+    # )
+
+    gpt_data = PythonOperator(
+        task_id="gpt_data",
+        python_callable=extraction_gpt_data,
         op_kwargs={
-            "url": URL_PARKING_DATA,
+            "url": URL_GPT_DATA,
             "chromedriver_path": CHROMEDRIVER_PATH,
             "airflow_home": AIRFLOW_HOME,
             "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_PARKING_DATA,
-            "file_name": "raw_parking_data",
+            "sublocation_data": SUBLOCATION_GPT_DATA,
+            "file_name": "raw_gpt_data",
             "columns": [
                 "date",
                 "hour",
-                "name",
-                "available",
-                "total",
-                "occupancy",
-                "trend",
+                "city",
+                "id",
+                "rating",
+                "rating_n",
+                "popularity",
+                "live",
+                "duration",
             ],
         },
         dag=dag,
     )
+
 
 # ? 4.3. Loading data
 
@@ -351,166 +380,185 @@ with TaskGroup(
         dag=dag,
     )
 
-    load_charging_station_data = PythonOperator(
-        task_id="load_charging_station_data",
-        python_callable=insert_data_to_table,
-        op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_CHARGING_STATION_DATA,
-            "file_name": "raw_charging_station_data",
-            "db_name": POSTGRES_DBNAME,
-            "schema_name": "raw",
-            "table_name": "charging_station",
-            "columns_table":
-            "date, hour, lat, long, address, occupied, available",
-            "data_type": "charging_station"
-        },
-        dag=dag,
-    )
+    # load_charging_station_data = PythonOperator(
+    #     task_id="load_charging_station_data",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_CHARGING_STATION_DATA,
+    #         "file_name": "raw_charging_station_data",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "charging_station",
+    #         "columns_table":
+    #         "date, hour, lat, long, address, occupied, available",
+    #         "data_type": "charging_station"
+    #     },
+    #     dag=dag,
+    # )
 
-    load_traffic_counter_data_1 = PythonOperator(
-        task_id="load_traffic_counter_data_1",
-        python_callable=insert_data_to_table,
-        op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_1",
-            "db_name": POSTGRES_DBNAME,
-            "schema_name": "raw",
-            "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
-        },
-        dag=dag,
-    )
+    # load_traffic_counter_data_1 = PythonOperator(
+    #     task_id="load_traffic_counter_data_1",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_1",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "traffic_counter",
+    #         "columns_table":
+    #         "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+    #         "data_type": "traffic_counter"
+    #     },
+    #     dag=dag,
+    # )
 
-    load_traffic_counter_data_2 = PythonOperator(
-        task_id="load_traffic_counter_data_2",
-        python_callable=insert_data_to_table,
-        op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_2",
-            "db_name": POSTGRES_DBNAME,
-            "schema_name": "raw",
-            "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
-        },
-        dag=dag,
-    )
+    # load_traffic_counter_data_2 = PythonOperator(
+    #     task_id="load_traffic_counter_data_2",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_2",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "traffic_counter",
+    #         "columns_table":
+    #         "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+    #         "data_type": "traffic_counter"
+    #     },
+    #     dag=dag,
+    # )
 
-    load_traffic_counter_data_3 = PythonOperator(
-        task_id="load_traffic_counter_data_3",
-        python_callable=insert_data_to_table,
-        op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_3",
-            "db_name": POSTGRES_DBNAME,
-            "schema_name": "raw",
-            "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
-        },
-        dag=dag,
-    )
+    # load_traffic_counter_data_3 = PythonOperator(
+    #     task_id="load_traffic_counter_data_3",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_3",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "traffic_counter",
+    #         "columns_table":
+    #         "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+    #         "data_type": "traffic_counter"
+    #     },
+    #     dag=dag,
+    # )
 
-    load_traffic_counter_data_4 = PythonOperator(
-        task_id="load_traffic_counter_data_4",
-        python_callable=insert_data_to_table,
-        op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_4",
-            "db_name": POSTGRES_DBNAME,
-            "schema_name": "raw",
-            "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
-        },
-        dag=dag,
-    )
+    # load_traffic_counter_data_4 = PythonOperator(
+    #     task_id="load_traffic_counter_data_4",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_4",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "traffic_counter",
+    #         "columns_table":
+    #         "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+    #         "data_type": "traffic_counter"
+    #     },
+    #     dag=dag,
+    # )
 
-    load_traffic_counter_data_5 = PythonOperator(
-        task_id="load_traffic_counter_data_5",
-        python_callable=insert_data_to_table,
-        op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_5",
-            "db_name": POSTGRES_DBNAME,
-            "schema_name": "raw",
-            "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
-        },
-        dag=dag,
-    )
+    # load_traffic_counter_data_5 = PythonOperator(
+    #     task_id="load_traffic_counter_data_5",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_5",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "traffic_counter",
+    #         "columns_table":
+    #         "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+    #         "data_type": "traffic_counter"
+    #     },
+    #     dag=dag,
+    # )
 
-    load_traffic_counter_data_6 = PythonOperator(
-        task_id="load_traffic_counter_data_6",
-        python_callable=insert_data_to_table,
-        op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
-            "file_name": "raw_traffic_counter_data_6",
-            "db_name": POSTGRES_DBNAME,
-            "schema_name": "raw",
-            "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
-        },
-        dag=dag,
-    )
+    # load_traffic_counter_data_6 = PythonOperator(
+    #     task_id="load_traffic_counter_data_6",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+    #         "file_name": "raw_traffic_counter_data_6",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "traffic_counter",
+    #         "columns_table":
+    #         "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+    #         "data_type": "traffic_counter"
+    #     },
+    #     dag=dag,
+    # )
 
-    load_parking_data = PythonOperator(
-        task_id="load_parking_data",
+    # load_parking_data = PythonOperator(
+    #     task_id="load_parking_data",
+    #     python_callable=insert_data_to_table,
+    #     op_kwargs={
+    #         "postgres_conn_id": POSTGRESS_CONN_ID,
+    #         "airflow_home": AIRFLOW_HOME,
+    #         "location_data": LOCATION_DATA,
+    #         "sublocation_data": SUBLOCATION_PARKING_DATA,
+    #         "file_name": "raw_parking_data",
+    #         "db_name": POSTGRES_DBNAME,
+    #         "schema_name": "raw",
+    #         "table_name": "parking",
+    #         "columns_table": "date, hour, name, available, total, occupancy, trend",
+    #         "data_type": "parking",
+    #     },
+    #     dag=dag,
+    # )
+
+    load_gpt_data = PythonOperator(
+        task_id="load_gpt_data",
         python_callable=insert_data_to_table,
         op_kwargs={
             "postgres_conn_id": POSTGRESS_CONN_ID,
             "airflow_home": AIRFLOW_HOME,
             "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_PARKING_DATA,
-            "file_name": "raw_parking_data",
+            "sublocation_data": SUBLOCATION_GPT_DATA,
+            "file_name": "raw_gpt_data",
             "db_name": POSTGRES_DBNAME,
             "schema_name": "raw",
-            "table_name": "parking",
-            "columns_table": "date, hour, name, available, total, occupancy, trend",
-            "data_type": "parking",
+            "table_name": "gpt",
+            "columns_table": "date, hour, city, id, rating, rating_n, popularity, live, duration",
+            "data_type": "gpt",
         },
         dag=dag,
     )
 
     bike_data >> load_bike_data
-    charging_station_data >> load_charging_station_data
-    traffic_counter_data_1 >> load_traffic_counter_data_1
-    traffic_counter_data_2 >> load_traffic_counter_data_2
-    traffic_counter_data_3 >> load_traffic_counter_data_3
-    traffic_counter_data_4 >> load_traffic_counter_data_4
-    traffic_counter_data_5 >> load_traffic_counter_data_5
-    traffic_counter_data_6 >> load_traffic_counter_data_6
-    parking_data >> load_parking_data
+    # charging_station_data >> load_charging_station_data
+    # traffic_counter_data_1 >> load_traffic_counter_data_1
+    # traffic_counter_data_2 >> load_traffic_counter_data_2
+    # traffic_counter_data_3 >> load_traffic_counter_data_3
+    # traffic_counter_data_4 >> load_traffic_counter_data_4
+    # traffic_counter_data_5 >> load_traffic_counter_data_5
+    # traffic_counter_data_6 >> load_traffic_counter_data_6
+    # parking_data >> load_parking_data
+    gpt_data >> load_gpt_data
 
 # ? 4.4. Finishing pipeline
 
