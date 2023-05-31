@@ -84,7 +84,7 @@ def test_webdriver(url: str, chromedriver_path: str):
         driver.quit()
 
 
-##########
+#######################
 
 
 def extraction_bike_data(
@@ -328,3 +328,62 @@ def extraction_parking_data(url: str, chromedriver_path: str, airflow_home: str,
 
     finally:
         driver.quit()
+
+
+def extraction_gpt_data(url: str, chromedriver_path: str, airflow_home: str, location_data: str, sublocation_data: str, file_name: str,
+                          columns: list) -> None:
+    """
+    This function extracts data from the Google Popular Times website and saves it in a csv file.
+    Args:
+        url (str): url of the Google Popular Times website
+        chromedriver_path (str): path to chromedriver
+        airflow_home (str): path to airflow home
+        location_data (str): path to location data
+        sublocation_data (str): path to sublocation data
+        file_name (str): name of the file
+        columns (list): list of the columns
+    Returns:
+        None
+    """
+    date, hour = _now_times()
+
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--log-level=DEBUG")
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    chrome_options.add_experimental_option('prefs', prefs)
+    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+
+    try:
+        driver.get(url)
+        time.sleep(10)
+        url_elems = driver.find_elements("xpath", "//div[@class='panel-header']")
+
+        rows = []
+        for father in url_elems:
+            row = []
+            row.append(date)
+            row.append(hour)
+            
+            try:
+                row.append('city')
+                row.append('id')
+                row.append('rating')
+                row.append('rating_n')
+                row.append('popularity')
+                row.append('live')
+                row.append('duration')
+
+                rows.append(row)
+
+            except Exception as e:
+                row.extend(['Error']*7)
+                rows.append(row)
+        
+        _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
+
+    finally:
+        driver.quit()
+
