@@ -329,7 +329,7 @@ def extraction_parking_data(url: str, chromedriver_path: str, airflow_home: str,
     finally:
         driver.quit()
 
-
+#TODO: Implement this function
 def extraction_gpt_data(url: str, chromedriver_path: str, airflow_home: str, location_data: str, sublocation_data: str, file_name: str,
                           columns: list) -> None:
     """

@@ -8,3 +8,6 @@ CREATE TABLE IF NOT EXISTS {{ params.table_name }} (
     occupied INT NOT NULL,
     available INT NOT NULL
 );
+
+-- Granting access to the table to regular_user ROLE
+GRANT SELECT ON TABLE {{ params.table_name }} TO regular_user;
