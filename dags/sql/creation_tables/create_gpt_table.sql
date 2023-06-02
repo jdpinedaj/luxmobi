@@ -10,3 +10,7 @@ CREATE TABLE IF NOT EXISTS {{ params.table_name }} (
     live VARCHAR(255) NULL,
     duration VARCHAR(255) NULL
 );
+
+
+-- Granting access to the table to regular_user ROLE
+GRANT SELECT ON TABLE {{ params.table_name }} TO regular_user;

@@ -74,7 +74,8 @@ with TaskGroup(
         task_id="create_public_schema",
         postgres_conn_id="postgres_default",
         sql="sql/create_schema.sql",
-        params={"schema_name": "raw"},
+        params={"database_name": "luxmobi",
+        "schema_name": "raw"},
         dag=dag,
     )
 
