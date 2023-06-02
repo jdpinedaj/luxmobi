@@ -67,6 +67,7 @@ URL_TRAFFIC_COUNTER_DATA_3 = "http://www.cita.lu/info_trafic/datex/trafficstatus
 URL_TRAFFIC_COUNTER_DATA_4 = "http://www.cita.lu/info_trafic/datex/trafficstatus_a6"
 URL_TRAFFIC_COUNTER_DATA_5 = "https://www.cita.lu/info_trafic/datex/trafficstatus_a4"
 URL_TRAFFIC_COUNTER_DATA_6 = "https://www.cita.lu/info_trafic/datex/trafficstatus_a3"
+
 URL_GPT_DATA = "https://www.vdl.lu/en/getting-around/by-car/parkings-and-pr"
 
 #######################
