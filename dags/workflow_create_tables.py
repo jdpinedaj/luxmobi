@@ -7,6 +7,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.task_group import TaskGroup
+import scripts.params as params
 
 #######################
 ##! 2. Default arguments
@@ -23,12 +24,7 @@ default_args = {
 }
 
 # It is possible to store all those variables as "Variables" within airflow
-SCHEDULE_INTERVAL = "@once"
-POSTGRES_ADDRESS = "host.docker.internal"
-POSTGRES_PORT = 5432
-POSTGRES_USERNAME = "nipi"
-POSTGRES_PASSWORD = "MobiLab1"
-POSTGRES_DBNAME = "luxmobi"
+SCHEDULE_INTERVAL = params.SCHEDULE_INTERVAL_ONCE
 
 # * Those values are needed to create the connection to the Postgres database in the airflow UI
 # conn = Connection(conn_id='postgres_default',
