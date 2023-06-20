@@ -101,15 +101,24 @@ def insert_data_to_table(
                 elif data_type == 'gpt':
                     date = values[0]
                     hour = values[1]
-                    city = values[2]
-                    id = values[3]
-                    rating = values[4]
-                    rating_n = values[5]
-                    popularity = values[6]
-                    live = values[7]
-                    duration = values[8]
+                    place_id = values[2]
+                    name = values[3]
+                    lat = values[4]
+                    lng = values[5]
+                    city = values[6]
+                    rating = values[7]
+                    rating_n = values[8]
+                    popularity_monday = values[9]
+                    popularity_tuesday = values[10]
+                    popularity_wednesday = values[11]
+                    popularity_thursday = values[12]
+                    popularity_friday = values[13]
+                    popularity_saturday = values[14]
+                    popularity_sunday = values[15]
+                    live = values[16]
+                    duration = values[17]
 
-                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{city}\', \'{id}\', \'{rating}\', \'{rating_n}\', \'{popularity}\', \'{live}\', \'{duration}\')'
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{place_id}\', \'{name}\', \'{lat}\', \'{lng}\', \'{city}\', \'{rating}\', \'{rating_n}\', \'{popularity_monday}\', \'{popularity_tuesday}\', \'{popularity_wednesday}\', \'{popularity_thursday}\', \'{popularity_friday}\', \'{popularity_saturday}\', \'{popularity_sunday}\', \'{live}\', \'{duration}\')'
                     
                 else:
                     raise ValueError("Invalid data type")
