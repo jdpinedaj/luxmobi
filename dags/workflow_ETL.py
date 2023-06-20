@@ -21,7 +21,7 @@ from scripts.extract_transform_data import (
     extraction_gpt_data,
 )
 from scripts.load_data import insert_data_to_table
-
+import scripts.params as params
 import os
 
 #######################
@@ -39,36 +39,33 @@ default_args = {
 }
 
 # It is possible to store all those variables as "Variables" within airflow
-# SCHEDULE_INTERVAL: To see the format, check https://crontab.guru/
-# SCHEDULE_INTERVAL = "0 * * * *"
-SCHEDULE_INTERVAL = "@once"
-AIRFLOW_HOME = os.getenv("AIRFLOW_HOME")
-LOCATION_DATA = "/dags/data/"
-SUBLOCATION_BIKE_DATA = "bike_data/"
-SUBLOCATION_CHARGING_STATION_DATA = "charging_station_data/"
-SUBLOCATION_TRAFFIC_COUNTER_DATA = "traffic_counter_data/"
-SUBLOCATION_PARKING_DATA = "parking_data/"
-SUBLOCATION_GPT_DATA = "gpt_data/"
-POSTGRESS_CONN_ID = "postgres_default"
-POSTGRES_ADDRESS = "host.docker.internal"
-POSTGRES_PORT = 5432
-POSTGRES_USERNAME = "nipi"
-POSTGRES_PASSWORD = "MobiLab1"
-POSTGRES_DBNAME = "luxmobi"
-CHROMEDRIVER_PATH = "/usr/local/bin/chromedriver"
-URL_BIKE = "https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=4507a17cda9135dd36b8ff13d8a4102ab3aa44a0"
-URL_CHARGING_STATION = (
-    "https://data.public.lu/en/datasets/r/22f9d77a-5138-4b02-b315-15f306b77034"
-)
-URL_PARKING_DATA = "https://www.vdl.lu/en/getting-around/by-car/parkings-and-pr"
-URL_TRAFFIC_COUNTER_DATA_1 = "https://www.cita.lu/info_trafic/datex/trafficstatus_b40"
-URL_TRAFFIC_COUNTER_DATA_2 = "http://www.cita.lu/info_trafic/datex/trafficstatus_a13"
-URL_TRAFFIC_COUNTER_DATA_3 = "http://www.cita.lu/info_trafic/datex/trafficstatus_a7"
-URL_TRAFFIC_COUNTER_DATA_4 = "http://www.cita.lu/info_trafic/datex/trafficstatus_a6"
-URL_TRAFFIC_COUNTER_DATA_5 = "https://www.cita.lu/info_trafic/datex/trafficstatus_a4"
-URL_TRAFFIC_COUNTER_DATA_6 = "https://www.cita.lu/info_trafic/datex/trafficstatus_a3"
 
-URL_GPT_DATA = "https://www.vdl.lu/en/getting-around/by-car/parkings-and-pr"
+SCHEDULE_INTERVAL = params.SCHEDULE_INTERVAL_ONCE
+AIRFLOW_HOME = params.AIRFLOW_HOME
+LOCATION_DATA = params.LOCATION_DATA
+SUBLOCATION_BIKE_DATA = params.SUBLOCATION_BIKE_DATA
+SUBLOCATION_CHARGING_STATION_DATA = params.SUBLOCATION_CHARGING_STATION_DATA
+SUBLOCATION_TRAFFIC_COUNTER_DATA = params.SUBLOCATION_TRAFFIC_COUNTER_DATA
+SUBLOCATION_PARKING_DATA = params.SUBLOCATION_PARKING_DATA
+SUBLOCATION_GPT_DATA = params.SUBLOCATION_GPT_DATA
+SUBLOCATION_GPT_DATA_CACHE = params.SUBLOCATION_GPT_DATA_CACHE
+POSTGRESS_CONN_ID = params.POSTGRESS_CONN_ID
+POSTGRES_ADDRESS = params.POSTGRES_ADDRESS
+POSTGRES_PORT = params.POSTGRES_PORT
+POSTGRES_USERNAME = params.POSTGRES_USERNAME
+POSTGRES_PASSWORD = params.POSTGRES_PASSWORD
+POSTGRES_DBNAME = params.POSTGRES_DBNAME
+CHROMEDRIVER_PATH = params.CHROMEDRIVER_PATH
+URL_BIKE = params.URL_BIKE
+URL_CHARGING_STATION = params.URL_CHARGING_STATION
+URL_PARKING_DATA = params.URL_PARKING_DATA
+URL_TRAFFIC_COUNTER_DATA_1 = params.URL_TRAFFIC_COUNTER_DATA_1
+URL_TRAFFIC_COUNTER_DATA_2 = params.URL_TRAFFIC_COUNTER_DATA_2
+URL_TRAFFIC_COUNTER_DATA_3 = params.URL_TRAFFIC_COUNTER_DATA_3
+URL_TRAFFIC_COUNTER_DATA_4 = params.URL_TRAFFIC_COUNTER_DATA_4
+URL_TRAFFIC_COUNTER_DATA_5 = params.URL_TRAFFIC_COUNTER_DATA_5
+URL_TRAFFIC_COUNTER_DATA_6 = params.URL_TRAFFIC_COUNTER_DATA_6
+
 
 #######################
 ##! 3. Instantiate a DAG
@@ -335,20 +332,28 @@ with TaskGroup(
         task_id="gpt_data",
         python_callable=extraction_gpt_data,
         op_kwargs={
-            "url": URL_GPT_DATA,
-            "chromedriver_path": CHROMEDRIVER_PATH,
             "airflow_home": AIRFLOW_HOME,
             "location_data": LOCATION_DATA,
+            "sublocation_cache": SUBLOCATION_GPT_DATA_CACHE,
             "sublocation_data": SUBLOCATION_GPT_DATA,
             "file_name": "raw_gpt_data",
             "columns": [
                 "date",
                 "hour",
+                "place_id",
+                "name",
+                "lat",
+                "lng",
                 "city",
-                "id",
                 "rating",
                 "rating_n",
-                "popularity",
+                "popularity_monday",
+                "popularity_tuesday",
+                "popularity_wednesday",
+                "popularity_thursday",
+                "popularity_friday",
+                "popularity_saturday",
+                "popularity_sunday",
                 "live",
                 "duration",
             ],
@@ -544,7 +549,7 @@ with TaskGroup(
             "db_name": POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "gpt",
-            "columns_table": "date, hour, city, id, rating, rating_n, popularity, live, duration",
+            "columns_table": "date, hour, place_id, name, lat, lng, city, rating, rating_n, popularity_monday, popularity_tuesday, popularity_wednesday, popularity_thursday, popularity_friday, popularity_saturday, popularity_sunday, live, duration",
             "data_type": "gpt",
         },
         dag=dag,
