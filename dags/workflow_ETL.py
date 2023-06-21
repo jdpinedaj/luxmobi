@@ -579,6 +579,4 @@ finish_pipeline = DummyOperator(
 
 start_pipeline >> extract_transform_data
 
-extract_transform_data >> load_data
-
 load_data >> finish_pipeline
