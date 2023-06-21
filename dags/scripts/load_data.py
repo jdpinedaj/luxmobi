@@ -104,7 +104,7 @@ def insert_data_to_table(
                     place_id = values[2]
                     name = values[3]
                     lat = values[4]
-                    lng = values[5]
+                    long = values[5]
                     city = values[6]
                     rating = values[7]
                     rating_n = values[8]
@@ -118,7 +118,7 @@ def insert_data_to_table(
                     live = values[16]
                     duration = values[17]
 
-                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{place_id}\', \'{name}\', \'{lat}\', \'{lng}\', \'{city}\', \'{rating}\', \'{rating_n}\', \'{popularity_monday}\', \'{popularity_tuesday}\', \'{popularity_wednesday}\', \'{popularity_thursday}\', \'{popularity_friday}\', \'{popularity_saturday}\', \'{popularity_sunday}\', \'{live}\', \'{duration}\')'
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{place_id}\', \'{name}\', \'{lat}\', \'{long}\', \'{city}\', \'{rating}\', \'{rating_n}\', \'{popularity_monday}\', \'{popularity_tuesday}\', \'{popularity_wednesday}\', \'{popularity_thursday}\', \'{popularity_friday}\', \'{popularity_saturday}\', \'{popularity_sunday}\', \'{live}\', \'{duration}\')'
                     
                 else:
                     raise ValueError("Invalid data type")

@@ -39,5 +39,6 @@ pyproject.toml
 readme-resources/*
 !readme-resources/framework.png
 dags/scripts/params.py
+dags/scripts/gpt_locations.py
 
 
