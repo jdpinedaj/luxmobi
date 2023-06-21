@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS {{ params.table_name }} (
     place_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     lat VARCHAR(255) NOT NULL,
-    lng VARCHAR(255) NOT NULL,
+    long VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
     rating VARCHAR(255) NULL,
     rating_n VARCHAR(255) NULL,

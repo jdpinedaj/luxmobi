@@ -1,3 +1,4 @@
+from typing import Any, Tuple
 import requests
 import json
 from xml.dom import minidom
@@ -6,45 +7,33 @@ from datetime import datetime
 import pandas as pd
 import os
 import json
+
 # from dags.scripts.utils.logs import logger
 
 # Libraries for web scraping
-
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
+
 
 # For gpt data
 import re
 import calendar
-import ssl
 import shutil
 import asyncio
 import aiohttp
 import aiofiles
+import scripts.params as params
+import scripts.gpt_locations as gpt_locations
 
 
 #######################
 # PARAMS FOR GPT DATA #
-# TODO: Pasar parametros.
-# Interval for regular Data Collection
-city = "Transit_all"
-# input_file = "/dags/data/gpt_data/Transit_ID.csv"
-# raw_data_path = "/dags/data/cache/"
-
-# Change the header to your System/ PC
-USER_AGENT = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Safari/605.1.15"}
-
-
-# noinspection PyUnresolvedReferences
-cookies = {"CONSENT": "YES+cb.20210720-07-p0.en+FX+410"}
-
-gcontext = ssl.SSLContext(ssl.PROTOCOL_TLS)
+city = params.CITY
+USER_AGENT = params.USER_AGENT
+cookies = params.COOKIES
+gcontext = params.GCONTEXT
+dict_gpt_locations = gpt_locations.DICT_GPT_LOCATIONS
 
 #######################
 
@@ -86,7 +75,7 @@ def _converting_and_saving_data(
         hour (str): hour of the data
     Returns:
         None
-        """
+    """
     df = pd.DataFrame(data, columns=columns)
 
     dir_path = airflow_home + location_data + sublocation_data
@@ -94,14 +83,46 @@ def _converting_and_saving_data(
 
     df.to_csv(file_path, index=False)
 
-#TODO: Explicar subfunciones.
-async def _download_site(session, url, place, timestr, count, airflow_home, location_data, sublocation_cache):
+
+async def _download_site(
+    session: aiohttp.ClientSession,
+    url: str,
+    place: str,
+    timestr: str,
+    count: int,
+    airflow_home: str,
+    location_data: str,
+    sublocation_cache: str,
+) -> str:
+    """
+    This function downloads the data from the url.
+    Args:
+        session (aiohttp.ClientSession): session
+        url (str): url to download
+        place (str): place to download
+        timestr (str): time of the download
+        count (int): count of the download
+        airflow_home (str): path to airflow home
+        location_data (str): path to location data
+        sublocation_cache (str): path to sublocation cache
+    Returns:
+        filename (str): name of the file
+    """
     try:
         response = await session.request(method="GET", url=url, ssl=gcontext)
         if response.status != 200:
             print(f"Failed to download {url}, status code: {response.status}")
             return
-        filename = (airflow_home + location_data + sublocation_cache + city + "/" + timestr + "/" + str(place) + ".txt"
+        filename = (
+            airflow_home
+            + location_data
+            + sublocation_cache
+            + city
+            + "/"
+            + timestr
+            + "/"
+            + str(place)
+            + ".txt"
         )
         print(count, place)
 
@@ -116,7 +137,24 @@ async def _download_site(session, url, place, timestr, count, airflow_home, loca
         print(f"An error occurred with {url}: {str(e)}")
 
 
-async def _download_all_sites(timestr, places, airflow_home, location_data, sublocation_cache):
+async def _download_all_sites(
+    timestr: str,
+    places: list,
+    airflow_home: str,
+    location_data: str,
+    sublocation_cache: str,
+) -> None:
+    """
+    This function downloads all the sites, using _download_site function.
+    Args:
+        timestr (str): time of the download
+        places (list): list of places to download
+        airflow_home (str): path to airflow home
+        location_data (str): path to location data
+        sublocation_cache (str): path to sublocation cache
+    Returns:
+        None
+    """
     timeout = aiohttp.ClientTimeout(total=60 * 60)
     connector = aiohttp.TCPConnector(limit=20)
     async with aiohttp.ClientSession(
@@ -135,54 +173,77 @@ async def _download_all_sites(timestr, places, airflow_home, location_data, subl
             else:
                 search_url = place_identifier[0]
             task_asyn = asyncio.ensure_future(
-                _download_site(session, search_url, place_identifier[2], timestr, count, airflow_home, location_data, sublocation_cache)
+                _download_site(
+                    session,
+                    search_url,
+                    place_identifier[2],
+                    timestr,
+                    count,
+                    airflow_home,
+                    location_data,
+                    sublocation_cache,
+                )
             )
             tasks.append(task_asyn)
         await asyncio.gather(*tasks, return_exceptions=True)
 
 
-def _get_populartimes_from_search(place_identifier, path):
+def _get_populartimes_from_search(
+    place_identifier: str, path: str
+) -> Tuple[float, int, dict, dict]:
     """
-    based on https://github.com/m-wrzr/populartimes
-    request information for a place and parse current popularity
-    :param place_identifier: name and address string
-    :return:
+    This function gets the popular times from the search, using the sites downloaded in _download_all_sites function.
+    It is based on https://github.com/m-wrzr/populartimes
+    Args:
+        place_identifier (str): place identifier
+        path (str): path to the sites
+    Returns:
+        rating (float): rating of the place
+        rating_n (int): number of ratings of the place
+        popular_times (dict): popular times of the place
+        time_spent (dict): time spent of the place
     """
-
     with open(path + "/" + str(place_identifier) + ".txt", mode="rb") as d:
         content = d.read()
 
-    data = content.decode('utf-8').split('/*""*/')[0]
+    data = content.decode("utf-8").split('/*""*/')[0]
     try:
-
-        idx1 = data.index('APP_INITIALIZATION_STATE=')
-        data_new = data[idx1 + 25:]
+        idx1 = data.index("APP_INITIALIZATION_STATE=")
+        data_new = data[idx1 + 25 :]
         idx2 = data_new.index(";window.APP_FLAGS=")
 
         final_string = data_new[:idx2]
 
         d = final_string.split("""'\\n""")
-        final_string = d[2].replace('\\\\\\', '#?replace?#')
-        final_string = final_string.replace('\\', '')
-        final_string = final_string.replace('#?replace?#', '\\')
-        final_string = '[[' + final_string.replace(']"]', ']]')
+        final_string = d[2].replace("\\\\\\", "#?replace?#")
+        final_string = final_string.replace("\\", "")
+        final_string = final_string.replace("#?replace?#", "\\")
+        final_string = "[[" + final_string.replace(']"]', "]]")
         flag_error = True
         count_error = 0
         while flag_error and count_error < 250:
             count_error += 1
             try:
-                jdata = json.loads(r'' + final_string)
+                jdata = json.loads(r"" + final_string)
                 flag_error = False
             except Exception as e:
                 msg = e.msg
-                if ("Expecting ',' delimiter" in e.msg):
-                    final_string = final_string[:e.pos - 1] + '' + final_string[e.pos:]
+                if "Expecting ',' delimiter" in e.msg:
+                    final_string = (
+                        final_string[: e.pos - 1] + "" + final_string[e.pos :]
+                    )
                 else:
-                    final_string = final_string[:e.pos] + '' + final_string[e.pos + 1:]
+                    final_string = (
+                        final_string[: e.pos] + "" + final_string[e.pos + 1 :]
+                    )
 
-        if (count_error == 250):
+        if count_error == 250:
             raise Exception(
-                'Error from load Json ' + msg + '  https://www.google.com/maps/place/?q=place_id:' + place_identifier)
+                "Error from load Json "
+                + msg
+                + "  https://www.google.com/maps/place/?q=place_id:"
+                + place_identifier
+            )
         info = _index_get(jdata, 0, 0, 6)
 
         rating = _index_get(info, 4, 7)
@@ -197,16 +258,24 @@ def _get_populartimes_from_search(place_identifier, path):
 
         # extract wait times and convert to minutes
         if time_spent:
-
-            nums = [float(f) for f in re.findall(r'\d*\.\d+|\d+', time_spent.replace(",", "."))]
-            contains_min, contains_hour = "min" in time_spent, "hour" in time_spent or "hr" in time_spent
+            nums = [
+                float(f)
+                for f in re.findall(r"\d*\.\d+|\d+", time_spent.replace(",", "."))
+            ]
+            contains_min, contains_hour = (
+                "min" in time_spent,
+                "hour" in time_spent or "hr" in time_spent,
+            )
 
             time_spent = None
 
             if contains_min and contains_hour:
                 time_spent = [nums[0], nums[1] * 60]
             elif contains_hour:
-                time_spent = [nums[0] * 60, (nums[0] if len(nums) == 1 else nums[1]) * 60]
+                time_spent = [
+                    nums[0] * 60,
+                    (nums[0] if len(nums) == 1 else nums[1]) * 60,
+                ]
             elif contains_min:
                 time_spent = [nums[0], nums[0] if len(nums) == 1 else nums[1]]
 
@@ -218,31 +287,31 @@ def _get_populartimes_from_search(place_identifier, path):
     # return  None,None,None,None,None
 
 
-def _get_popularity_for_day(popularity):
+def _get_popularity_for_day(popularity: list) -> Tuple[list, list]:
     """
-    based on https://github.com/m-wrzr/populartimes
-    Returns popularity for day
-    :param popularity:
-    :return:
+    This function gets the popularity for each day of the week.
+    It is based on https://github.com/m-wrzr/populartimes
+    Args:
+        popularity (list): list of popularity
+    Returns:
+        ret_popularity (list): list of popularity for each day of the week
+        ret_wait (list): list of waiting time for each day of the week
     """
-
     # Initialize empty matrix with 0s
     pop_json = [[0 for _ in range(24)] for _ in range(7)]
     wait_json = [[0 for _ in range(24)] for _ in range(7)]
 
     for day in popularity:
-
         day_no, pop_times = day[:2]
 
         if pop_times:
             for hour_info in pop_times:
-
                 hour = hour_info[0]
                 pop_json[day_no - 1][hour] = hour_info[1]
 
                 # check if the waiting string is available and convert no minutes
                 if len(hour_info) > 5:
-                    wait_digits = re.findall(r'\d+', hour_info[3])
+                    wait_digits = re.findall(r"\d+", hour_info[3])
 
                     if len(wait_digits) == 0:
                         wait_json[day_no - 1][hour] = 0
@@ -251,39 +320,48 @@ def _get_popularity_for_day(popularity):
                     elif "hour" in hour_info[3]:
                         wait_json[day_no - 1][hour] = int(wait_digits[0]) * 60
                     else:
-                        wait_json[day_no - 1][hour] = int(wait_digits[0]) * 60 + int(wait_digits[1])
+                        wait_json[day_no - 1][hour] = int(wait_digits[0]) * 60 + int(
+                            wait_digits[1]
+                        )
 
                 # day wrap
                 if hour_info[0] == 23:
                     day_no = day_no % 7 + 1
 
     ret_popularity = [
-        {
-            "name": list(calendar.day_name)[d],
-            "data": pop_json[d]
-        } for d in range(7)
+        {"name": list(calendar.day_name)[d], "data": pop_json[d]} for d in range(7)
     ]
 
+    ret_popularity_monday = ret_popularity[0]["data"]
+    ret_popularity_tuesday = ret_popularity[1]["data"]
+    ret_popularity_wednesday = ret_popularity[2]["data"]
+    ret_popularity_thursday = ret_popularity[3]["data"]
+    ret_popularity_friday = ret_popularity[4]["data"]
+    ret_popularity_saturday = ret_popularity[5]["data"]
+    ret_popularity_sunday = ret_popularity[6]["data"]
+
     # waiting time only if applicable
-    ret_wait = [
-        {
-            "name": list(calendar.day_name)[d],
-            "data": wait_json[d]
-        } for d in range(7)
-    ] if any(any(day) for day in wait_json) else []
+    ret_wait = (
+        [{"name": list(calendar.day_name)[d], "data": wait_json[d]} for d in range(7)]
+        if any(any(day) for day in wait_json)
+        else []
+    )
 
     # {"name" : "monday", "data": [...]} for each weekday as list
-    return ret_popularity, ret_wait
+    return ret_popularity_monday, ret_popularity_tuesday, ret_popularity_wednesday, ret_popularity_thursday, ret_popularity_friday, ret_popularity_saturday, ret_popularity_sunday
 
 
-
-def _index_get(array, *argv):
+def _index_get(array: list, *argv: int) -> Any:
     """
-    based on https://github.com/m-wrzr/populartimes
-    checks if a index is available in the array and returns it
-    :param array: the data array
-    :param argv: index integers
-    :return: None if not available or the return value
+    This function checks if a index is available in the array and returns it.
+    If the index is out of range or the value is not available, it returns None.
+    It is based on https://github.com/m-wrzr/populartimes
+
+    Args:
+        array (list): array to get the value from
+        *argv (int): index of the value
+    Returns:
+        value (any): value of the index
     """
     try:
         for index in argv:
@@ -297,8 +375,8 @@ def _index_get(array, *argv):
         return None
 
 
-
 #######################
+
 
 def test_webdriver(url: str, chromedriver_path: str):
     chrome_options = Options()
@@ -307,7 +385,7 @@ def test_webdriver(url: str, chromedriver_path: str):
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--log-level=DEBUG")
     prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.add_experimental_option('prefs', prefs)
+    chrome_options.add_experimental_option("prefs", prefs)
     driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
     try:
         driver.get(url)
@@ -346,7 +424,6 @@ def extraction_bike_data(
 
     rows = []
     for el in data:
-
         row = []
         name = el["name"].replace("'", "")
         lat = el["position"]["lat"]
@@ -365,7 +442,16 @@ def extraction_bike_data(
         row.append(available_bike_stands)
         rows.append(row)
 
-    _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
+    _converting_and_saving_data(
+        rows,
+        columns,
+        airflow_home,
+        location_data,
+        sublocation_data,
+        file_name,
+        date,
+        hour,
+    )
 
 
 def extraction_charging_station_data(
@@ -391,25 +477,31 @@ def extraction_charging_station_data(
     date, hour = _now_times()
 
     dom = minidom.parse(ur.urlopen(url))
-    owned = dom.getElementsByTagName('Placemark')
+    owned = dom.getElementsByTagName("Placemark")
 
     rows = []
     for el in owned:
         row = []
 
-        lat = el.getElementsByTagName('coordinates')[0].firstChild.data.split(
-            ',')[1]
-        long = el.getElementsByTagName('coordinates')[0].firstChild.data.split(
-            ',')[0]
-        address = el.getElementsByTagName(
-            'address')[0].firstChild.nodeValue.replace(",",
-                                                       "").replace("'", "")
-        occupied = el.getElementsByTagName(
-            'description')[0].firstChild.nodeValue.split(
-                'occupied connectors')[0].split('</b>')[-2].split('<b>')[-1]
-        available = el.getElementsByTagName(
-            'description')[0].firstChild.nodeValue.split(
-                'available connectors')[0].split('</b>')[-2].split('<b>')[-1]
+        lat = el.getElementsByTagName("coordinates")[0].firstChild.data.split(",")[1]
+        long = el.getElementsByTagName("coordinates")[0].firstChild.data.split(",")[0]
+        address = (
+            el.getElementsByTagName("address")[0]
+            .firstChild.nodeValue.replace(",", "")
+            .replace("'", "")
+        )
+        occupied = (
+            el.getElementsByTagName("description")[0]
+            .firstChild.nodeValue.split("occupied connectors")[0]
+            .split("</b>")[-2]
+            .split("<b>")[-1]
+        )
+        available = (
+            el.getElementsByTagName("description")[0]
+            .firstChild.nodeValue.split("available connectors")[0]
+            .split("</b>")[-2]
+            .split("<b>")[-1]
+        )
 
         row.append(date)
         row.append(hour)
@@ -420,7 +512,16 @@ def extraction_charging_station_data(
         row.append(available)
         rows.append(row)
 
-    _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
+    _converting_and_saving_data(
+        rows,
+        columns,
+        airflow_home,
+        location_data,
+        sublocation_data,
+        file_name,
+        date,
+        hour,
+    )
 
 
 def extraction_traffic_counter_data(
@@ -446,30 +547,27 @@ def extraction_traffic_counter_data(
     date, hour = _now_times()
 
     dom = minidom.parse(ur.urlopen(url))
-    owned = dom.getElementsByTagName('siteMeasurements')
+    owned = dom.getElementsByTagName("siteMeasurements")
 
     rows = []
     for el in owned:
         row = []
 
-        id = el.getElementsByTagName(
-            'measurementSiteReference')[0].getAttribute("id")
-        latitude = el.getElementsByTagName('latitude')[0].firstChild.nodeValue
-        longitude = el.getElementsByTagName(
-            'longitude')[0].firstChild.nodeValue
-        road = el.getElementsByTagName('roadNumber')[0].firstChild.nodeValue
-        direction_tags = dom.getElementsByTagName(
-            'directionBoundOnLinearSection')
+        id = el.getElementsByTagName("measurementSiteReference")[0].getAttribute("id")
+        latitude = el.getElementsByTagName("latitude")[0].firstChild.nodeValue
+        longitude = el.getElementsByTagName("longitude")[0].firstChild.nodeValue
+        road = el.getElementsByTagName("roadNumber")[0].firstChild.nodeValue
+        direction_tags = dom.getElementsByTagName("directionBoundOnLinearSection")
         if direction_tags:
             direction = direction_tags[0].firstChild.nodeValue
         else:
             direction = None
 
-        percentage = el.getElementsByTagName(
-            'percentage')[0].firstChild.nodeValue
-        speed = el.getElementsByTagName('speed')[0].firstChild.nodeValue
-        vehicle_flow_rate = el.getElementsByTagName(
-            'vehicleFlowRate')[0].firstChild.nodeValue
+        percentage = el.getElementsByTagName("percentage")[0].firstChild.nodeValue
+        speed = el.getElementsByTagName("speed")[0].firstChild.nodeValue
+        vehicle_flow_rate = el.getElementsByTagName("vehicleFlowRate")[
+            0
+        ].firstChild.nodeValue
 
         row.append(date)
         row.append(hour)
@@ -483,11 +581,27 @@ def extraction_traffic_counter_data(
         row.append(vehicle_flow_rate)
         rows.append(row)
 
-    _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
+    _converting_and_saving_data(
+        rows,
+        columns,
+        airflow_home,
+        location_data,
+        sublocation_data,
+        file_name,
+        date,
+        hour,
+    )
 
 
-def extraction_parking_data(url: str, chromedriver_path: str, airflow_home: str, location_data: str, sublocation_data: str, file_name: str,
-                          columns: list) -> None:
+def extraction_parking_data(
+    url: str,
+    chromedriver_path: str,
+    airflow_home: str,
+    location_data: str,
+    sublocation_data: str,
+    file_name: str,
+    columns: list,
+) -> None:
     """
     This function extracts data from the parking website of the Luxembourg City and saves it in a csv file.
     Args:
@@ -509,7 +623,7 @@ def extraction_parking_data(url: str, chromedriver_path: str, airflow_home: str,
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--log-level=DEBUG")
     prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.add_experimental_option('prefs', prefs)
+    chrome_options.add_experimental_option("prefs", prefs)
     driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
 
     try:
@@ -528,43 +642,59 @@ def extraction_parking_data(url: str, chromedriver_path: str, airflow_home: str,
             row.append(name.text.replace("â", "a").replace("é", "e").replace("'", ""))
 
             try:
-                if b.text == 'No data available':
+                if b.text == "No data available":
                     row.extend([-1] * 3)
-                    row.extend(['No data available'])
+                    row.extend(["No data available"])
                     rows.append(row)
-                elif b.text == 'Closed':
+                elif b.text == "Closed":
                     row.extend([-1] * 3)
-                    row.extend(['Closed'])
+                    row.extend(["Closed"])
                     rows.append(row)
                 else:
                     p = b.text.split()
                     available = p[0]
-                    total = p[-1].replace('/', '')
+                    total = p[-1].replace("/", "")
                     occupancy = 100 - ((float(available) / float(total)) * 100)
                     occupancy = round(occupancy, 2)
-                    ac = father.find_element("xpath", ".//*[local-name() = 'svg' and @width='12']")
+                    ac = father.find_element(
+                        "xpath", ".//*[local-name() = 'svg' and @width='12']"
+                    )
 
                     row.append(available)
                     row.append(total)
                     row.append(occupancy)
-                    row.append(ac.get_attribute('class'))
+                    row.append(ac.get_attribute("class"))
 
                     rows.append(row)
 
             except Exception as e:
                 row.extend([-1] * 3)
-                row.extend(['Error'])
+                row.extend(["Error"])
                 rows.append(row)
 
-        
-        _converting_and_saving_data(rows, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
+        _converting_and_saving_data(
+            rows,
+            columns,
+            airflow_home,
+            location_data,
+            sublocation_data,
+            file_name,
+            date,
+            hour,
+        )
 
     finally:
         driver.quit()
 
 
-def extraction_gpt_data(airflow_home: str, location_data: str, sublocation_cache: str, sublocation_data: str, file_name: str,
-                          columns: list) -> None:
+def extraction_gpt_data(
+    airflow_home: str,
+    location_data: str,
+    sublocation_cache: str,
+    sublocation_data: str,
+    file_name: str,
+    columns: list,
+) -> None:
     """
     This function extracts data from the Google Popular Times website and saves it in a csv file.
     Args:
@@ -599,90 +729,66 @@ def extraction_gpt_data(airflow_home: str, location_data: str, sublocation_cache
             os.mkdir(dir_path_gpt + timestr)
         except FileExistsError:
             pass
-        
-        #TODO: Incluir nuevos lugares y todo para params.py
+
         # input file with list of POIs with names, house number, street, etc
-        dict_df = {
-                    'index': [1],
-                    'type': ['Luxembourg_transit'],
-                    'place_id': ['ChIJ32pqnLkVlUcRxbSuQU7UQcU'],
-                    'name': ['Apach'],
-                    'Link': [''],
-                    'lat': [49.458944],
-                    'lng': [6.3722829],
-                    'Type.1': ['train_station'],
-                    'Type.2': ['transit_station'],
-                    'Type.3': ['point_of_interest'],
-                    'Type.4': ['establishment'],
-                    'Type.5': ['']
-                }
-        df = pd.DataFrame(dict_df)
+
+        df = pd.DataFrame(dict_gpt_locations)
+
+        # Removing ' to column 'name'
+        df["name"] = df["name"].str.replace("'", "")
 
         list_places = []
         place_ids_list = list(df["place_id"])
-        link_list = list(df['Link'])
         ind_list = list(df["index"])
 
         for i in range(len(place_ids_list)):
             place = place_ids_list[i]
-            if place == "nan":
-                place = link_list[i]
-                list_places.append([place, False, ind_list[i]])
-            else:
-                list_places.append([place, True, ind_list[i]])
+            list_places.append([place, True, ind_list[i]])
 
-        start_time = time.time()
+        # Download data
+        asyncio.run(
+            _download_all_sites(
+                timestr, list_places, airflow_home, location_data, sublocation_cache
+            )
+        )
 
-        asyncio.run(_download_all_sites(timestr, list_places, airflow_home, location_data, sublocation_cache))
-
-
+        # Extract needed data
         list_rating = []
         list_rating_n = []
         list_current_popularity = []
         list_waittimes = []
-        list_populartimes_monday = []
-        list_populartimes_tuesday = []
-        list_populartimes_wednesday = []
-        list_populartimes_thursday = []
-        list_populartimes_friday = []
-        list_populartimes_saturday = []
-        list_populartimes_sunday = []
+        list_popularity = [] 
 
         for i in range(len(list_places)):
             try:
-
                 (
                     rating,
                     rating_n,
                     popular_times,
                     current_popularity,
                     time_spent,
-                ) = _get_populartimes_from_search(list_places[i][2], dir_path_gpt + timestr)
-                formatted_pp_times, formatted_wait_time = _get_popularity_for_day(
-                    popular_times
+                ) = _get_populartimes_from_search(
+                    list_places[i][2], dir_path_gpt + timestr
                 )
+                (
+                    ret_popularity_monday,
+                    ret_popularity_tuesday,
+                    ret_popularity_wednesday,
+                    ret_popularity_thursday,
+                    ret_popularity_friday,
+                    ret_popularity_saturday,
+                    ret_popularity_sunday,
+                ) = _get_popularity_for_day(popular_times)
 
-                # Create a dictionary to store the separate columns
-                formatted_pp_times_columns = {}
-
-                # Iterate through the list of dictionaries
-                for day_data in formatted_pp_times:
-                    day_name = day_data["name"]
-                    day_values = day_data["data"]
-                    
-                    # Create a new column name based on the day name
-                    column_name = f"formatted_pp_times_{day_name.lower()}"
-                    
-                    # Assign the day values to the respective column name
-                    formatted_pp_times_columns[column_name] = day_values
-
-                list_populartimes_monday.append(formatted_pp_times_columns["formatted_pp_times_monday"])
-                list_populartimes_tuesday.append(formatted_pp_times_columns["formatted_pp_times_tuesday"])
-                list_populartimes_wednesday.append(formatted_pp_times_columns["formatted_pp_times_wednesday"])
-                list_populartimes_thursday.append(formatted_pp_times_columns["formatted_pp_times_thursday"])
-                list_populartimes_friday.append(formatted_pp_times_columns["formatted_pp_times_friday"])
-                list_populartimes_saturday.append(formatted_pp_times_columns["formatted_pp_times_saturday"])
-                list_populartimes_sunday.append(formatted_pp_times_columns["formatted_pp_times_sunday"])
+                list_popularity.append({
+                    "popularity_monday": ret_popularity_monday,
+                    "popularity_tuesday": ret_popularity_tuesday,
+                    "popularity_wednesday": ret_popularity_wednesday,
+                    "popularity_thursday": ret_popularity_thursday,
+                    "popularity_friday": ret_popularity_friday,
+                    "popularity_saturday": ret_popularity_saturday,
+                    "popularity_sunday": ret_popularity_sunday
+                })
                 list_rating.append(rating)
                 list_rating_n.append(rating_n)
                 list_current_popularity.append(current_popularity)
@@ -697,45 +803,74 @@ def extraction_gpt_data(airflow_home: str, location_data: str, sublocation_cache
                     + "https://www.google.com/maps/place/?q=place_id:"
                     + list_places[i][0],
                 )
-                list_populartimes_monday.append("None")
-                list_populartimes_tuesday.append("None")
-                list_populartimes_wednesday.append("None")
-                list_populartimes_thursday.append("None")
-                list_populartimes_friday.append("None")
-                list_populartimes_saturday.append("None")
-                list_populartimes_sunday.append("None")
+                list_popularity.append({
+                    "popularity_monday": "None",
+                    "popularity_tuesday": "None",
+                    "popularity_wednesday": "None",
+                    "popularity_thursday": "None",
+                    "popularity_friday": "None",
+                    "popularity_saturday": "None",
+                    "popularity_sunday": "None"
+                })
                 list_rating.append("None")
                 list_rating_n.append("None")
                 list_current_popularity.append("None")
                 list_waittimes.append("None")
 
-        df['date'] = date
-        df['hour'] = hour
-        df['city'] = city
+        # Create a dataframe with the data
+        df["date"] = date
+        df["hour"] = hour
+        df["city"] = city
         df["rating"] = list_rating
         df["rating_n"] = list_rating_n
-        df['popularity_monday'] = str(list_populartimes_monday).replace(',','')
-        df['popularity_tuesday'] = str(list_populartimes_tuesday).replace(',','')
-        df['popularity_wednesday'] = str(list_populartimes_wednesday).replace(',','')
-        df['popularity_thursday'] = str(list_populartimes_thursday).replace(',','')
-        df['popularity_friday'] = str(list_populartimes_friday).replace(',','')
-        df['popularity_saturday'] = str(list_populartimes_saturday).replace(',','')
-        df['popularity_sunday'] = str(list_populartimes_sunday).replace(',','')
-        df['live'] = list_current_popularity
-        df['duration'] = list_waittimes
+        df["popularity_monday"] = [str(popularity.get("popularity_monday", [])).replace(",", "") for popularity in list_popularity]
+        df["popularity_tuesday"] = [str(popularity.get("popularity_tuesday", [])).replace(",", "") for popularity in list_popularity]
+        df["popularity_wednesday"] = [str(popularity.get("popularity_wednesday", [])).replace(",", "") for popularity in list_popularity]
+        df["popularity_thursday"] = [str(popularity.get("popularity_thursday", [])).replace(",", "") for popularity in list_popularity]
+        df["popularity_friday"] = [str(popularity.get("popularity_friday", [])).replace(",", "") for popularity in list_popularity]
+        df["popularity_saturday"] = [str(popularity.get("popularity_saturday", [])).replace(",", "") for popularity in list_popularity]
+        df["popularity_sunday"] = [str(popularity.get("popularity_sunday", [])).replace(",", "") for popularity in list_popularity]
+        df["live"] = list_current_popularity
+        df["duration"] = list_waittimes
 
+        # Select the columns to be saved
+        data = df[
+            [
+                "date",
+                "hour",
+                "place_id",
+                "name",
+                "lat",
+                "long",
+                "city",
+                "rating",
+                "rating_n",
+                "popularity_monday",
+                "popularity_tuesday",
+                "popularity_wednesday",
+                "popularity_thursday",
+                "popularity_friday",
+                "popularity_saturday",
+                "popularity_sunday",
+                "live",
+                "duration",
+            ]
+        ]
 
-        data = df[['date', 'hour', 'place_id', 'name', 'lat', 'lng', 'city', 'rating', 'rating_n', 'popularity_monday', 'popularity_tuesday', 'popularity_wednesday', 'popularity_thursday', 'popularity_friday', 'popularity_saturday', 'popularity_sunday', 'live', 'duration']]
-
-        # data.to_csv(output_path + '/' + city + '/' + 'populartimes_' + timestr + '.csv', index=None)
-        _converting_and_saving_data(data, columns, airflow_home, location_data, sublocation_data, file_name, date, hour)
-
-        duration = time.time() - start_time
+        # Save the data
+        _converting_and_saving_data(
+            data,
+            columns,
+            airflow_home,
+            location_data,
+            sublocation_data,
+            file_name,
+            date,
+            hour,
+        )
 
         # Delete the cache
-        # shutil.rmtree(dir_path_gpt + timestr) # TODO: Borrar cache
-        print(f"Downloaded in {duration} seconds")
-
+        shutil.rmtree(dir_path_gpt + timestr) 
 
 
     except Exception as e:
