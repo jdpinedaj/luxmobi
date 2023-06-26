@@ -54,38 +54,38 @@ def insert_data_to_table(
                     name = values[0]
                     date = values[1]
                     hour = values[2]
-                    lat = values[3]
-                    long = values[4]
+                    latitude = values[3]
+                    longitude = values[4]
                     total_bike_stand = values[5]
                     bike_available = values[6]
                     bike_stands_available = values[7]
 
-                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{name}\', \'{date}\', \'{hour}\', \'{lat}\', \'{long}\', \'{total_bike_stand}\', \'{bike_available}\', \'{bike_stands_available}\')'
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{name}\', \'{date}\', \'{hour}\', \'{latitude}\', \'{longitude}\', \'{total_bike_stand}\', \'{bike_available}\', \'{bike_stands_available}\')'
 
                 elif data_type == 'charging_station':
                     date = values[0]
                     hour = values[1]
-                    lat = values[2]
-                    long = values[3]
+                    latitude = values[2]
+                    longitude = values[3]
                     address = values[4]
                     occupied = values[5]
                     available = values[6]
 
-                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{lat}\', \'{long}\', \'{address}\', \'{occupied}\', \'{available}\')'
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{latitude}\', \'{longitude}\', \'{address}\', \'{occupied}\', \'{available}\')'
 
                 elif data_type == 'traffic_counter':
                     date = values[0]
                     hour = values[1]
                     id = values[2]
-                    lat = values[3]
-                    long = values[4]
+                    latitude = values[3]
+                    longitude = values[4]
                     road = values[5]
                     direction = values[6]
                     percentage = values[7]
                     speed = values[8]
                     vehicle_flow_rate = values[9]
 
-                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{id}\', \'{lat}\', \'{long}\', \'{road}\', \'{direction}\', \'{percentage}\', \'{speed}\', \'{vehicle_flow_rate}\')'
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{id}\', \'{latitude}\', \'{longitude}\', \'{road}\', \'{direction}\', \'{percentage}\', \'{speed}\', \'{vehicle_flow_rate}\')'
 
                 elif data_type == 'parking':
                     date = values[0]
@@ -103,8 +103,8 @@ def insert_data_to_table(
                     hour = values[1]
                     place_id = values[2]
                     name = values[3]
-                    lat = values[4]
-                    long = values[5]
+                    latitude = values[4]
+                    longitude = values[5]
                     city = values[6]
                     rating = values[7]
                     rating_n = values[8]
@@ -118,7 +118,7 @@ def insert_data_to_table(
                     live = values[16]
                     duration = values[17]
 
-                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{place_id}\', \'{name}\', \'{lat}\', \'{long}\', \'{city}\', \'{rating}\', \'{rating_n}\', \'{popularity_monday}\', \'{popularity_tuesday}\', \'{popularity_wednesday}\', \'{popularity_thursday}\', \'{popularity_friday}\', \'{popularity_saturday}\', \'{popularity_sunday}\', \'{live}\', \'{duration}\')'
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{place_id}\', \'{name}\', \'{latitude}\', \'{longitude}\', \'{city}\', \'{rating}\', \'{rating_n}\', \'{popularity_monday}\', \'{popularity_tuesday}\', \'{popularity_wednesday}\', \'{popularity_thursday}\', \'{popularity_friday}\', \'{popularity_saturday}\', \'{popularity_sunday}\', \'{live}\', \'{duration}\')'
                     
                 else:
                     raise ValueError("Invalid data type")

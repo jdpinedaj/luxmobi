@@ -23,17 +23,9 @@ import shutil
 import asyncio
 import aiohttp
 import aiofiles
-import scripts.params as params
+import scripts.config as config
 import scripts.gpt_locations as gpt_locations
 
-
-#######################
-# PARAMS FOR GPT DATA #
-city = params.CITY
-USER_AGENT = params.USER_AGENT
-cookies = params.COOKIES
-gcontext = params.GCONTEXT
-dict_gpt_locations = gpt_locations.DICT_GPT_LOCATIONS
 
 #######################
 
@@ -109,7 +101,7 @@ async def _download_site(
         filename (str): name of the file
     """
     try:
-        response = await session.request(method="GET", url=url, ssl=gcontext)
+        response = await session.request(method="GET", url=url, ssl=config.GCONTEXT)
         if response.status != 200:
             print(f"Failed to download {url}, status code: {response.status}")
             return
@@ -117,7 +109,7 @@ async def _download_site(
             airflow_home
             + location_data
             + sublocation_cache
-            + city
+            + config.CITY
             + "/"
             + timestr
             + "/"
@@ -158,7 +150,7 @@ async def _download_all_sites(
     timeout = aiohttp.ClientTimeout(total=60 * 60)
     connector = aiohttp.TCPConnector(limit=20)
     async with aiohttp.ClientSession(
-        connector=connector, headers=USER_AGENT, cookies=cookies, timeout=timeout
+        connector=connector, headers=config.USER_AGENT, cookies=config.COOKIES, timeout=timeout
     ) as session:
         tasks = []
         count = 0
@@ -426,8 +418,8 @@ def extraction_bike_data(
     for el in data:
         row = []
         name = el["name"].replace("'", "")
-        lat = el["position"]["lat"]
-        long = el["position"]["lng"]
+        latitude = el["position"]["lat"]
+        longitude = el["position"]["lng"]
         bike_stands = el["bike_stands"]
         available_bikes = el["available_bikes"]
         available_bike_stands = el["available_bike_stands"]
@@ -435,8 +427,8 @@ def extraction_bike_data(
         row.append(name)
         row.append(date)
         row.append(hour)
-        row.append(lat)
-        row.append(long)
+        row.append(latitude)
+        row.append(longitude)
         row.append(bike_stands)
         row.append(available_bikes)
         row.append(available_bike_stands)
@@ -483,8 +475,8 @@ def extraction_charging_station_data(
     for el in owned:
         row = []
 
-        lat = el.getElementsByTagName("coordinates")[0].firstChild.data.split(",")[1]
-        long = el.getElementsByTagName("coordinates")[0].firstChild.data.split(",")[0]
+        latitude = el.getElementsByTagName("coordinates")[0].firstChild.data.split(",")[1]
+        longitude = el.getElementsByTagName("coordinates")[0].firstChild.data.split(",")[0]
         address = (
             el.getElementsByTagName("address")[0]
             .firstChild.nodeValue.replace(",", "")
@@ -505,8 +497,8 @@ def extraction_charging_station_data(
 
         row.append(date)
         row.append(hour)
-        row.append(lat)
-        row.append(long)
+        row.append(latitude)
+        row.append(longitude)
         row.append(address)
         row.append(occupied)
         row.append(available)
@@ -719,8 +711,8 @@ def extraction_gpt_data(
             pass
 
         # Place to save the data
-        dir_path_gpt = airflow_home + location_data + sublocation_cache + city + "/"
-        # dir_path_gpt = raw_data_path + city + "/"
+        dir_path_gpt = airflow_home + location_data + sublocation_cache + config.CITY + "/"
+        # dir_path_gpt = raw_data_path + config.CITY + "/"
         try:
             os.mkdir(dir_path_gpt[:-1])
         except FileExistsError:
@@ -732,7 +724,7 @@ def extraction_gpt_data(
 
         # input file with list of POIs with names, house number, street, etc
 
-        df = pd.DataFrame(dict_gpt_locations)
+        df = pd.DataFrame(gpt_locations.DICT_GPT_LOCATIONS)
 
         # Removing ' to column 'name'
         df["name"] = df["name"].str.replace("'", "")
@@ -820,7 +812,7 @@ def extraction_gpt_data(
         # Create a dataframe with the data
         df["date"] = date
         df["hour"] = hour
-        df["city"] = city
+        df["city"] = config.CITY
         df["rating"] = list_rating
         df["rating_n"] = list_rating_n
         df["popularity_monday"] = [str(popularity.get("popularity_monday", [])).replace(",", "") for popularity in list_popularity]
@@ -840,8 +832,8 @@ def extraction_gpt_data(
                 "hour",
                 "place_id",
                 "name",
-                "lat",
-                "long",
+                "latitude",
+                "longitude",
                 "city",
                 "rating",
                 "rating_n",
