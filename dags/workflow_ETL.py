@@ -5,12 +5,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-
-# from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python import PythonOperator
-
-# from airflow.providers.postgres.operators.postgres import PostgresOperator
-# from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.task_group import TaskGroup
 from scripts.extract_transform_data import (
     test_webdriver,
@@ -21,7 +16,7 @@ from scripts.extract_transform_data import (
     extraction_gpt_data,
 )
 from scripts.load_data import insert_data_to_table
-import scripts.params as params
+import scripts.config as config
 import os
 
 #######################
@@ -38,35 +33,6 @@ default_args = {
     "retry_delay": timedelta(seconds=15),
 }
 
-# It is possible to store all those variables as "Variables" within airflow
-
-SCHEDULE_INTERVAL = params.SCHEDULE_INTERVAL_ONCE
-AIRFLOW_HOME = params.AIRFLOW_HOME
-LOCATION_DATA = params.LOCATION_DATA
-SUBLOCATION_BIKE_DATA = params.SUBLOCATION_BIKE_DATA
-SUBLOCATION_CHARGING_STATION_DATA = params.SUBLOCATION_CHARGING_STATION_DATA
-SUBLOCATION_TRAFFIC_COUNTER_DATA = params.SUBLOCATION_TRAFFIC_COUNTER_DATA
-SUBLOCATION_PARKING_DATA = params.SUBLOCATION_PARKING_DATA
-SUBLOCATION_GPT_DATA = params.SUBLOCATION_GPT_DATA
-SUBLOCATION_GPT_DATA_CACHE = params.SUBLOCATION_GPT_DATA_CACHE
-POSTGRESS_CONN_ID = params.POSTGRESS_CONN_ID
-POSTGRES_ADDRESS = params.POSTGRES_ADDRESS
-POSTGRES_PORT = params.POSTGRES_PORT
-POSTGRES_USERNAME = params.POSTGRES_USERNAME
-POSTGRES_PASSWORD = params.POSTGRES_PASSWORD
-POSTGRES_DBNAME = params.POSTGRES_DBNAME
-CHROMEDRIVER_PATH = params.CHROMEDRIVER_PATH
-URL_BIKE = params.URL_BIKE
-URL_CHARGING_STATION = params.URL_CHARGING_STATION
-URL_PARKING_DATA = params.URL_PARKING_DATA
-URL_TRAFFIC_COUNTER_DATA_1 = params.URL_TRAFFIC_COUNTER_DATA_1
-URL_TRAFFIC_COUNTER_DATA_2 = params.URL_TRAFFIC_COUNTER_DATA_2
-URL_TRAFFIC_COUNTER_DATA_3 = params.URL_TRAFFIC_COUNTER_DATA_3
-URL_TRAFFIC_COUNTER_DATA_4 = params.URL_TRAFFIC_COUNTER_DATA_4
-URL_TRAFFIC_COUNTER_DATA_5 = params.URL_TRAFFIC_COUNTER_DATA_5
-URL_TRAFFIC_COUNTER_DATA_6 = params.URL_TRAFFIC_COUNTER_DATA_6
-
-
 #######################
 ##! 3. Instantiate a DAG
 #######################
@@ -75,7 +41,8 @@ dag = DAG(
     dag_id="workflow_ETL",
     description="workflow_ETL",
     start_date=datetime(2023, 5, 24, 7, 0, 0),
-    schedule_interval=SCHEDULE_INTERVAL,
+    #TODO: Once it is testes, change to config.SCHEDULE_INTERVAL_HOURLY
+    schedule_interval=config.SCHEDULE_INTERVAL_ONCE,
     concurrency=5,
     max_active_runs=1,
     default_args=default_args,
@@ -98,7 +65,7 @@ start_pipeline = DummyOperator(
 #     python_callable=test_webdriver,
 #     op_kwargs={
 #         "url": URL_PARKING_DATA,
-#         "chromedriver_path": CHROMEDRIVER_PATH,
+#         "chromedriver_path": config.CHROMEDRIVER_PATH,
 #     },
 #     dag=dag,
 # )
@@ -114,17 +81,17 @@ with TaskGroup(
         task_id="bike_data",
         python_callable=extraction_bike_data,
         op_kwargs={
-            "url": URL_BIKE,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_BIKE_DATA,
+            "url": config.URL_BIKE,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_BIKE_DATA,
             "file_name": "raw_bike_data",
             "columns": [
                 "name",
                 "date",
                 "hour",
-                "lat",
-                "long",
+                "latitude",
+                "longitude",
                 "bike_stands",
                 "available_bikes",
                 "available_bike_stands",
@@ -137,16 +104,16 @@ with TaskGroup(
         task_id="charging_station_data",
         python_callable=extraction_charging_station_data,
         op_kwargs={
-            "url": URL_CHARGING_STATION,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_CHARGING_STATION_DATA,
+            "url": config.URL_CHARGING_STATION,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_CHARGING_STATION_DATA,
             "file_name": "raw_charging_station_data",
             "columns" : [
         "date",
         "hour",
-        "lat",
-        "long",
+        "latitude",
+        "longitude",
         "address",
         "occupied",
         "available",
@@ -159,17 +126,17 @@ with TaskGroup(
         task_id="traffic_counter_data_1",
         python_callable=extraction_traffic_counter_data,
         op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_1,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "url": config.URL_TRAFFIC_COUNTER_DATA_1,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_1",
             "columns": [
         "date",
         "hour",
         "id",
-        "lat",
-        "long",
+        "latitude",
+        "longitude",
         "road",
         "direction",
         "percentage",
@@ -184,17 +151,17 @@ with TaskGroup(
         task_id="traffic_counter_data_2",
         python_callable=extraction_traffic_counter_data,
         op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_2,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "url": config.URL_TRAFFIC_COUNTER_DATA_2,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_2",
             "columns": [
         "date",
         "hour",
         "id",
-        "lat",
-        "long",
+        "latitude",
+        "longitude",
         "road",
         "direction",
         "percentage",
@@ -209,17 +176,17 @@ with TaskGroup(
         task_id="traffic_counter_data_3",
         python_callable=extraction_traffic_counter_data,
         op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_3,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "url": config.URL_TRAFFIC_COUNTER_DATA_3,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_3",
             "columns": [
         "date",
         "hour",
         "id",
-        "lat",
-        "long",
+        "latitude",
+        "longitude",
         "road",
         "direction",
         "percentage",
@@ -234,17 +201,17 @@ with TaskGroup(
         task_id="traffic_counter_data_4",
         python_callable=extraction_traffic_counter_data,
         op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_4,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "url": config.URL_TRAFFIC_COUNTER_DATA_4,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_4",
             "columns": [
         "date",
         "hour",
         "id",
-        "lat",
-        "long",
+        "latitude",
+        "longitude",
         "road",
         "direction",
         "percentage",
@@ -259,17 +226,17 @@ with TaskGroup(
         task_id="traffic_counter_data_5",
         python_callable=extraction_traffic_counter_data,
         op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_5,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "url": config.URL_TRAFFIC_COUNTER_DATA_5,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_5",
             "columns": [
         "date",
         "hour",
         "id",
-        "lat",
-        "long",
+        "latitude",
+        "longitude",
         "road",
         "direction",
         "percentage",
@@ -284,17 +251,17 @@ with TaskGroup(
         task_id="traffic_counter_data_6",
         python_callable=extraction_traffic_counter_data,
         op_kwargs={
-            "url": URL_TRAFFIC_COUNTER_DATA_6,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "url": config.URL_TRAFFIC_COUNTER_DATA_6,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_6",
             "columns": [
         "date",
         "hour",
         "id",
-        "lat",
-        "long",
+        "latitude",
+        "longitude",
         "road",
         "direction",
         "percentage",
@@ -309,11 +276,11 @@ with TaskGroup(
         task_id="parking_data",
         python_callable=extraction_parking_data,
         op_kwargs={
-            "url": URL_PARKING_DATA,
-            "chromedriver_path": CHROMEDRIVER_PATH,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_PARKING_DATA,
+            "url": config.URL_PARKING_DATA,
+            "chromedriver_path": config.CHROMEDRIVER_PATH,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_PARKING_DATA,
             "file_name": "raw_parking_data",
             "columns": [
                 "date",
@@ -332,18 +299,18 @@ with TaskGroup(
         task_id="gpt_data",
         python_callable=extraction_gpt_data,
         op_kwargs={
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_cache": SUBLOCATION_GPT_DATA_CACHE,
-            "sublocation_data": SUBLOCATION_GPT_DATA,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_cache": config.SUBLOCATION_GPT_DATA_CACHE,
+            "sublocation_data": config.SUBLOCATION_GPT_DATA,
             "file_name": "raw_gpt_data",
             "columns": [
                 "date",
                 "hour",
                 "place_id",
                 "name",
-                "lat",
-                "long",
+                "latitude",
+                "longitude",
                 "city",
                 "rating",
                 "rating_n",
@@ -372,15 +339,15 @@ with TaskGroup(
         task_id="load_bike_data",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_BIKE_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_BIKE_DATA,
             "file_name": "raw_bike_data",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "bike",
-            "columns_table": "name, date, hour, lat, long, total_bike_stand, bike_available, bike_stands_available",
+            "columns_table": "name, date, hour, latitude, longitude, total_bike_stand, bike_available, bike_stands_available",
             "data_type": "bike",
         },
         dag=dag,
@@ -390,16 +357,16 @@ with TaskGroup(
         task_id="load_charging_station_data",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_CHARGING_STATION_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_CHARGING_STATION_DATA,
             "file_name": "raw_charging_station_data",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "charging_station",
             "columns_table":
-            "date, hour, lat, long, address, occupied, available",
+            "date, hour, latitude, longitude, address, occupied, available",
             "data_type": "charging_station"
         },
         dag=dag,
@@ -409,12 +376,12 @@ with TaskGroup(
         task_id="load_traffic_counter_data_1",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_1",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
             "columns_table":
@@ -428,12 +395,12 @@ with TaskGroup(
         task_id="load_traffic_counter_data_2",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_2",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
             "columns_table":
@@ -447,12 +414,12 @@ with TaskGroup(
         task_id="load_traffic_counter_data_3",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_3",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
             "columns_table":
@@ -466,12 +433,12 @@ with TaskGroup(
         task_id="load_traffic_counter_data_4",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_4",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
             "columns_table":
@@ -485,12 +452,12 @@ with TaskGroup(
         task_id="load_traffic_counter_data_5",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_5",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
             "columns_table":
@@ -504,12 +471,12 @@ with TaskGroup(
         task_id="load_traffic_counter_data_6",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_TRAFFIC_COUNTER_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_6",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
             "columns_table":
@@ -523,12 +490,12 @@ with TaskGroup(
         task_id="load_parking_data",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_PARKING_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_PARKING_DATA,
             "file_name": "raw_parking_data",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "parking",
             "columns_table": "date, hour, name, available, total, occupancy, trend",
@@ -541,15 +508,15 @@ with TaskGroup(
         task_id="load_gpt_data",
         python_callable=insert_data_to_table,
         op_kwargs={
-            "postgres_conn_id": POSTGRESS_CONN_ID,
-            "airflow_home": AIRFLOW_HOME,
-            "location_data": LOCATION_DATA,
-            "sublocation_data": SUBLOCATION_GPT_DATA,
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_GPT_DATA,
             "file_name": "raw_gpt_data",
-            "db_name": POSTGRES_DBNAME,
+            "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "gpt",
-            "columns_table": "date, hour, place_id, name, lat, long, city, rating, rating_n, popularity_monday, popularity_tuesday, popularity_wednesday, popularity_thursday, popularity_friday, popularity_saturday, popularity_sunday, live, duration",
+            "columns_table": "date, hour, place_id, name, latitude, longitude, city, rating, rating_n, popularity_monday, popularity_tuesday, popularity_wednesday, popularity_thursday, popularity_friday, popularity_saturday, popularity_sunday, live, duration",
             "data_type": "gpt",
         },
         dag=dag,

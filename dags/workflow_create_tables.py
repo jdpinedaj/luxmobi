@@ -7,7 +7,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.task_group import TaskGroup
-import scripts.params as params
+import scripts.config as config
 
 #######################
 ##! 2. Default arguments
@@ -23,8 +23,6 @@ default_args = {
     "retry_delay": timedelta(seconds=15),
 }
 
-# It is possible to store all those variables as "Variables" within airflow
-SCHEDULE_INTERVAL = params.SCHEDULE_INTERVAL_ONCE
 
 # * Those values are needed to create the connection to the Postgres database in the airflow UI
 # conn = Connection(conn_id='postgres_default',
@@ -43,7 +41,7 @@ dag = DAG(
     dag_id="create_tables",
     description="create_tables",
     start_date=datetime(2023, 5, 4),
-    schedule_interval=SCHEDULE_INTERVAL,
+    schedule_interval=config.SCHEDULE_INTERVAL_ONCE,
     concurrency=5,
     max_active_runs=1,
     default_args=default_args,
