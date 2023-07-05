@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS {{ params.table_name }} (
     popularity_saturday VARCHAR(255) NULL,
     popularity_sunday VARCHAR(255) NULL,
     live VARCHAR(255) NULL,
-    duration VARCHAR(255) NULL
+    duration VARCHAR(255) NULL,
+    CONSTRAINT unique_datetime_place_id UNIQUE (date, hour, place_id)
 );
 
 

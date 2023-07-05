@@ -13,7 +13,7 @@ def transfer_data_mysql_to_postgres(ti):
 
     src_conn = src.get_conn()
     cursor = src_conn.cursor()
-    with open('../sql/previous_tables.sql', 'r') as f:
+    with open('/dags/sql/previous_tables/gpt_activity_table.sql', 'r') as f:
         sql = f.read().format(
             table_name='luxmob.gpt_activity')
     cursor.execute(sql)
