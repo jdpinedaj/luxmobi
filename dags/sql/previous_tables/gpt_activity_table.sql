@@ -16,5 +16,6 @@ SELECT DATE(Time) AS date,
        CONCAT('[', REPLACE(TRIM(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(Popularity, '||Sunday:', -1), '||', 1), 'Sunday:', '')), '.', ' '), ']') AS popularity_sunday,
        Live as live,
        Duration as duration
-FROM {{ params.table_name }}
-ORDER BY Time DESC;
+FROM luxmob.gpt_activity
+WHERE DATE(Time) >= '2023-01-01'
+ORDER BY Time ASC;

@@ -8,7 +8,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 from scripts.extract_transform_data import (
-    test_webdriver,
+    # test_webdriver,
     extraction_bike_data,
     extraction_charging_station_data,
     extraction_traffic_counter_data,
