@@ -89,6 +89,14 @@ with TaskGroup(
         dag=dag,
     )
 
+    create_departure_board_table = PostgresOperator(
+        task_id="create_departure_board_table",
+        postgres_conn_id="postgres_default",
+        sql="sql/creation_tables/create_departure_board_table.sql",
+        params={"table_name": "luxmobi.raw.departure_board"},
+        dag=dag,
+    )
+
     create_charging_station_table = PostgresOperator(
         task_id="create_charging_station_table",
         postgres_conn_id="postgres_default",
@@ -125,6 +133,7 @@ with TaskGroup(
         create_bike_table,
         create_charging_station_table,
         create_stops_public_transport_table,
+        create_departure_board_table,
         create_parking_table,
         create_traffic_counter_table,
         create_gpt_table,
