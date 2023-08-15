@@ -4,6 +4,8 @@ dags/data/charging_station_data/*
 dags/data/parking_data/*
 dags/data/traffic_counter_data/*
 dags/data/gpt_data/*
+dags/data/stops_public_transport_data/*
+dags/data/traffic_counter_data/*
 dags/data/csv_files/
 
 !dags/data/bike_data/.gitkeep
