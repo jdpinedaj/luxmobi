@@ -11,6 +11,8 @@ dags/data/csv_files/
 !dags/data/parking_data/.gitkeep
 !dags/data/traffic_counter_data/.gitkeep
 !dags/data/gpt_data/.gitkeep
+!dags/data/stops_public_transport_data/.gitkeep
+!dags/data/traffic_counter_data/.gitkeep
 
 # cache
 __pycache__

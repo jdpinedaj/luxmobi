@@ -65,13 +65,13 @@ def insert_data_to_table(
                 elif data_type == 'stops_public_transport':
                     date = values[0]
                     hour = values[1]
-                    extid = values[2]
-                    name = values[3]
-                    line = values[4]
-                    catOut = values[5]
-                    cls = values[6]
-                    catOutS = values[7]
-                    catOutL = values[8]
+                    name = values[2]
+                    line = values[3]
+                    catOut = values[4]
+                    cls = values[5]
+                    catOutS = values[6]
+                    catOutL = values[7]
+                    extid = values[7]
                     bus_stop = values[9]
                     latitude = values[10]
                     longitude = values[11]
@@ -79,7 +79,7 @@ def insert_data_to_table(
                     dist = values[13]
                     products = values[14]
 
-                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{extid}\', \'{name}\', \'{line}\', \'{catOut}\', \'{cls}\', \'{catOutS}\', \'{catOutL}\', \'{bus_stop}\', \'{latitude}\', \'{longitude}\', \'{weight}\', \'{dist}\', \'{products}\')'
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{name}\', \'{line}\', \'{catOut}\', \'{cls}\', \'{catOutS}\', \'{catOutL}\', \'{extid}\', \'{bus_stop}\', \'{latitude}\', \'{longitude}\', \'{weight}\', \'{dist}\', \'{products}\')'
 
                 elif data_type == 'departure_board':
                     date = values[0]
