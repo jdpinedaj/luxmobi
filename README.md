@@ -41,7 +41,7 @@ Finally, the data is loaded into a [PostgreSQL](https://www.postgresql.org/) dat
 Then, [DBeaver](https://dbeaver.io/) is used to manage the database, even though it can be managed using other tools such as [DataGrip](https://www.jetbrains.com/datagrip/).
 <br/>
 
-The entire pipeline is containerized using [Docker](https://www.docker.com/). and it is orchestrated using [Apache Airflow](https://airflow.apache.org/).
+The entire pipeline is containerized using [Docker](https://www.docker.com/), and it is orchestrated using [Apache Airflow](https://airflow.apache.org/).
 Finally, all the resources are stored in a [GitHub](https://github.com/jdpinedaj/luxmobi) repository.
 
 
@@ -90,7 +90,7 @@ In addition, please include the following element in the postgres service:
 On Linux, the quick-start needs to know your host user id and needs to have group id set to 0. Otherwise the files created in dags, logs and plugins will be created with root user. You have to make sure to configure them for the docker-compose:
 
 ```
-mkdir -p ./dags ./logs ./plugins
+mkdir -p ./dags ./logs ./plugins ./config
 echo -e "AIRFLOW_UID=$(id -u)" > .env
 ```
 
@@ -126,27 +126,37 @@ docker-compose up -d
 
 If you want to install python requirements to the airflow container after the initialization of the database, you can do it by:
 
-- adding the requirements to the requirements.txt file
-- rebuilding the image docker-compose build by running `docker-compose build`
+- adding the requirements to the *requirements.txt* file
+- rebuilding the image docker-compose build by running `docker-compose build --no-cache`, after commenting and uncommenting the respective lines at the beginning of the *docker-compose.yaml* file.
 - restarting the containers by running `docker-compose up -d`
 
 #### 7. Accessing the environment via a browser using the web interface
 
 Check http://localhost:8080
+Or http://host.docker.internal:8080 
 
 #### 8. Airflow connection and Postgres Operator
 
 In Airflow/Admin/Connections
 
-- Conncection ID: postgres_default
-- Connection type: postgres
-- Host: postgres # or host.docker.internal
-- Schema: luxmobi
-- Login: nipi
-- Password: MobiLab1
-- Port: 5432
+- Conncection ID: `postgres_default`
+- Connection type: `postgres`
+- Host: `postgres` # or `host.docker.internal`
+- Schema: `luxmobi`
+- Login: `nipi`
+- Password: `MobiLab1`
+- Port: `5432`
 
-#### 9. Reseting Docker to start again
+
+#### 9. If there are some problems starting postgres:
+
+```
+docker exec -it luxmobi-postgres-1 psql -U nipi -d luxmobi -c "CREATE ROLE airflow LOGIN PASSWORD 'airflow';"
+docker exec -it luxmobi-postgres-1 psql -U nipi -d luxmobi -c "CREATE DATABASE airflow;"
+```
+
+
+#### 10. Reseting Docker to start again
 
 In case you need to reinstall everything again, you just need to run:
 

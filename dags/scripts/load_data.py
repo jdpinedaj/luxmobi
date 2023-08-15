@@ -30,7 +30,7 @@ def insert_data_to_table(
         location_data (str): path to location data
         sublocation_data (str): path to sublocation data
         file_name (str): name of the file
-        data_type (str): type of data being inserted. Possible values: 'bike', 'charging_station', 'traffic_counter', 'parking', 'gpt'
+        data_type (str): type of data being inserted. Possible values: 'bike', 'stops_public_transport', 'departure_board', 'charging_station', 'traffic_counter', 'parking', 'gpt'
     Returns:
         None
     """
@@ -61,6 +61,47 @@ def insert_data_to_table(
                     bike_stands_available = values[7]
 
                     sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{name}\', \'{date}\', \'{hour}\', \'{latitude}\', \'{longitude}\', \'{total_bike_stand}\', \'{bike_available}\', \'{bike_stands_available}\')'
+
+                elif data_type == 'stops_public_transport':
+                    date = values[0]
+                    hour = values[1]
+                    extid = values[2]
+                    name = values[3]
+                    line = values[4]
+                    catOut = values[5]
+                    cls = values[6]
+                    catOutS = values[7]
+                    catOutL = values[8]
+                    bus_stop = values[9]
+                    latitude = values[10]
+                    longitude = values[11]
+                    weight = values[12]
+                    dist = values[13]
+                    products = values[14]
+
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{extid}\', \'{name}\', \'{line}\', \'{catOut}\', \'{cls}\', \'{catOutS}\', \'{catOutL}\', \'{bus_stop}\', \'{latitude}\', \'{longitude}\', \'{weight}\', \'{dist}\', \'{products}\')'
+
+                elif data_type == 'departure_board':
+                    date = values[0]
+                    hour = values[1]
+                    name = values[2]
+                    num = values[3]
+                    line = values[4]
+                    catOut = values[5]
+                    catIn = values[6]
+                    catCode = values[7]
+                    cls = values[8]
+                    operatorCode = values[9]
+                    operator = values[10]
+                    busName = values[11]
+                    type = values[12]
+                    stop = values[13]
+                    stopExtId = values[14]
+                    direction = values[15]
+                    trainNumber = values[16]
+                    trainCategory = values[17]
+
+                    sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{name}\', \'{num}\', \'{line}\', \'{catOut}\', \'{catIn}\', \'{catCode}\', \'{cls}\', \'{operatorCode}\', \'{operator}\', \'{busName}\', \'{type}\', \'{stop}\', \'{stopExtId}\', \'{direction}\', \'{trainNumber}\', \'{trainCategory}\')'
 
                 elif data_type == 'charging_station':
                     date = values[0]

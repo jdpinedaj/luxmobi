@@ -31,6 +31,9 @@ dags/scripts/piergiorgio/
 ejemplo_javier_mysql/
 data_extraction/
 previous_requirements.txt
+Dockerfile_prev
+dags/workflow_integration_db.py
+previous_files/
 
 # others
 .idea
