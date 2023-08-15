@@ -114,13 +114,13 @@ with TaskGroup(
             "columns": [
                 "date",
                 "hour",
-                "extid"
                 "name",
                 "line",
                 "catOut",
                 "cls",
                 "catOutS",
                 "catOutL",
+                "extid",
                 "bus_stop",
                 "latitude",
                 "longitude",
@@ -430,7 +430,7 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "stops_public_transport",
-            "columns_table": "date, hour, extid, name, line, catout, cls, catouts, catoutl, bus_stop, latitude, longitude, weight, dist, products",
+            "columns_table": "date, hour, name, line, catout, cls, catouts, catoutl, extid, bus_stop, latitude, longitude, weight, dist, products",
             "data_type": "stops_public_transport",
         },
         dag=dag,

@@ -598,44 +598,34 @@ def extraction_stops_public_transport_data(
     response = requests.get(url)
     data = json.loads(response.text)
 
+    columns = [
+    "date", "hour", "name", "line", "cat_out", "cls", "cat_out_s",
+    "cat_out_l", "extid", "bus_stop", "latitude", "longitude", 
+    "weight", "dist", "products"
+]
     rows = []
     for location in data['stopLocationOrCoordLocation']:
-        stop_location = location['StopLocation']
-        for product in stop_location['productAtStop']:
-            row = []
-            name = product["name"]
-            line = product["line"]
-            cat_out = product["catOut"]
-            cls = product["cls"]
-            cat_out_s = product["catOutS"]
-            cat_out_l = product["catOutL"]
-
-            extid = stop_location["extId"]
-            bus_stop = stop_location["name"]
-            bus_stop = bus_stop.replace("'", "")
-            latitude = stop_location["lat"]
-            longitude = stop_location["lon"]
-            weight = stop_location["weight"]
-            dist = stop_location["dist"]
-            products = stop_location["products"]
-
-            row.append(date)
-            row.append(hour)
-            row.append(name)
-            row.append(line)
-            row.append(cat_out)
-            row.append(cls)
-            row.append(cat_out_s)
-            row.append(cat_out_l)
-            row.append(extid)
-            row.append(bus_stop)
-            row.append(latitude)
-            row.append(longitude)
-            row.append(weight)
-            row.append(dist)
-            row.append(products)
-
-            rows.append(row)
+        stop_location = location.get('StopLocation', {})
+        if 'productAtStop' in stop_location:
+            for product in stop_location['productAtStop']:
+                row_data = {
+                "date": date,
+                "hour": hour,
+                "name": product.get("name", None),
+                "line": product.get("line", None),
+                "cat_out": product.get("catOut", None),
+                "cls": product.get("cls", None),
+                "cat_out_s": product.get("catOutS", None),
+                "cat_out_l": product.get("catOutL", None),
+                "extid": stop_location.get("extId", None),
+                "bus_stop": stop_location.get("name", "").replace("'", ""),
+                "latitude": stop_location.get("lat", None),
+                "longitude": stop_location.get("lon", None),
+                "weight": stop_location.get("weight", None),
+                "dist": stop_location.get("dist", None),
+                "products": stop_location.get("products", None)
+            }
+                rows.append([row_data[col] for col in columns])
 
     _converting_and_saving_data(
         rows,
