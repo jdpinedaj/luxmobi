@@ -11,10 +11,11 @@ from scripts.extract_transform_data import (
     # test_webdriver,
     extraction_bike_data,
     extraction_stops_public_transport_data,
+    extraction_departure_board_data,
     extraction_charging_station_data,
     extraction_traffic_counter_data,
     extraction_parking_data,
-    extraction_gpt_data,
+    extraction_gpt_data,   
 )
 from scripts.load_data import insert_data_to_table
 import scripts.config as config
@@ -41,7 +42,7 @@ default_args = {
 dag = DAG(
     dag_id="workflow_ETL",
     description="workflow_ETL",
-    start_date=datetime(2023, 5, 24, 7, 0, 0),
+    start_date=datetime(2023, 8, 16, 7, 0, 0),
     #TODO: Once it is testes, change to config.SCHEDULE_INTERVAL_HOURLY
     schedule_interval=config.SCHEDULE_INTERVAL_ONCE,
     concurrency=5,
