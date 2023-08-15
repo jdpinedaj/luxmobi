@@ -81,6 +81,14 @@ with TaskGroup(
         dag=dag,
     )
 
+    create_stops_public_transport_table = PostgresOperator(
+        task_id="create_stops_public_transport_table",
+        postgres_conn_id="postgres_default",
+        sql="sql/creation_tables/create_stops_public_transport_table.sql",
+        params={"table_name": "luxmobi.raw.stops_public_transport"},
+        dag=dag,
+    )
+
     create_charging_station_table = PostgresOperator(
         task_id="create_charging_station_table",
         postgres_conn_id="postgres_default",

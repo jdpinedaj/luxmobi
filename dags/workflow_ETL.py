@@ -10,6 +10,7 @@ from airflow.utils.task_group import TaskGroup
 from scripts.extract_transform_data import (
     # test_webdriver,
     extraction_bike_data,
+    extraction_stops_public_transport_data,
     extraction_charging_station_data,
     extraction_traffic_counter_data,
     extraction_parking_data,
@@ -95,6 +96,69 @@ with TaskGroup(
                 "bike_stands",
                 "available_bikes",
                 "available_bike_stands",
+            ],
+        },
+        dag=dag,
+    )
+
+    stops_public_transport_data = PythonOperator(
+        task_id="stops_public_transport_data",
+        python_callable=extraction_stops_public_transport_data,
+        op_kwargs={
+            "url": config.URL_STOPS_PUBLIC_TRANSPORT,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_STOPS_PUBLIC_TRANSPORT_DATA,
+            "file_name": "raw_stops_public_transport_data",
+            "columns": [
+                "date",
+                "hour",
+                "extid"
+                "name",
+                "line",
+                "catOut",
+                "cls",
+                "catOutS",
+                "catOutL",
+                "bus_stop",
+                "latitude",
+                "longitude",
+                "weight",
+                "dist",
+                "products",
+            ],
+        },
+        dag=dag,
+    )
+
+    departure_board_data = PythonOperator(
+        task_id="departure_board_data",
+        python_callable=extraction_departure_board_data,
+        op_kwargs={
+            "url": config.URL_DEPARTURE_BOARD,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_DEPARTURE_BOARD_DATA,
+            "file_name": "raw_departure_board_data",
+            "columns": [
+                "date",
+                "hour",
+                "name",
+                "num",
+                "line",
+                "catOut",
+                "catIn",
+                "catCode",
+                "cls",
+                "operatorCode",
+                "operator",
+                "busName",
+                "type",
+                "stop",
+                "stopExtId",
+                "direction",
+                "trainNumber",
+                "trainCategory",
             ],
         },
         dag=dag,
@@ -353,6 +417,41 @@ with TaskGroup(
         dag=dag,
     )
 
+    load_stops_public_transport_data = PythonOperator(
+        task_id="load_stops_public_transport_data",
+        python_callable=insert_data_to_table,
+        op_kwargs={
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
+            "sublocation_data": config.SUBLOCATION_STOPS_PUBLIC_TRANSPORT_DATA,
+            "file_name": "raw_stops_public_transport_data",
+            "db_name": config.POSTGRES_DBNAME,
+            "schema_name": "raw",
+            "table_name": "stops_public_transport",
+            "columns_table": "date, hour, extid, name, line, catout, cls, catouts, catoutl, bus_stop, latitude, longitude, weight, dist, products",
+            "data_type": "stops_public_transport",
+        },
+        dag=dag,
+    )
+
+    load_departure_board_data = PythonOperator(
+        task_id="load_departure_board_data",
+        python_callable=insert_data_to_table,
+        op_kwargs={
+            "postgres_conn_id": config.POSTGRESS_CONN_ID,
+            "airflow_home": config.AIRFLOW_HOME,
+            "sublocation_data": config.SUBLOCATION_DEPARTURE_BOARD_DATA,
+            "file_name": "raw_departure_board_data",
+            "db_name": config.POSTGRES_DBNAME,
+            "schema_name": "raw",
+            "table_name": "departure_board",
+            "columns_table": "date, hour, name, num, line, catout, catin, catcode, cls, operatorcode, operator, busname, type, stop, stopextid, direction, trainnumber, traincategory",
+            "data_type": "departure_board",
+        },
+        dag=dag,
+    )
+
     load_charging_station_data = PythonOperator(
         task_id="load_charging_station_data",
         python_callable=insert_data_to_table,
@@ -523,6 +622,8 @@ with TaskGroup(
     )
 
     bike_data >> load_bike_data
+    stops_public_transport_data >> load_stops_public_transport_data
+    departure_board_data >> load_departure_board_data
     charging_station_data >> load_charging_station_data
     traffic_counter_data_1 >> load_traffic_counter_data_1
     traffic_counter_data_2 >> load_traffic_counter_data_2

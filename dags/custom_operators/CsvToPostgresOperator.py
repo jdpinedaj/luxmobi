@@ -9,6 +9,16 @@ import scripts.config as config
 
 
 class CsvToPostgresOperator(BaseOperator):
+    """
+    This operator is used to transfer data from csv to postgres
+    Args:
+        csv_filepath: csv file path
+        target_table: target table name
+        postgres_conn_id: postgres connection id
+    Returns:
+        None
+    """
+
     @apply_defaults
     def __init__(self,
                  csv_filepath=None,
@@ -16,7 +26,7 @@ class CsvToPostgresOperator(BaseOperator):
                  postgres_conn_id=config.POSTGRESS_CONN_ID,
                  *args,
                  **kwargs):
-        
+
         super().__init__(*args, **kwargs)
         self.csv_filepath = csv_filepath
         self.target_table = target_table
@@ -32,8 +42,8 @@ class CsvToPostgresOperator(BaseOperator):
 
         with open(self.csv_filepath, 'r') as f:
             reader = csv.reader(f)
-            fields = next(reader) # get the headers
-            data = list(reader)   # get the rest of the data
+            fields = next(reader)  # get the headers
+            data = list(reader)  # get the rest of the data
 
         # Now, create SQL for each row and execute it
         for row in data:
@@ -48,7 +58,9 @@ class CsvToPostgresOperator(BaseOperator):
             """.format(
                 table=self.target_table,
                 columns=", ".join(fields),
-                values=", ".join(f"'{row_dict[field]}'" for field in fields)  # assuming all fields are strings, adjust as needed
+                values=", ".join(
+                    f"'{row_dict[field]}'" for field in fields
+                )  # assuming all fields are strings, adjust as needed
             )
 
             # Execute the SQL
