@@ -40,7 +40,7 @@ default_args = {
 dag = DAG(
     dag_id="create_tables",
     description="create_tables",
-    start_date=datetime(2023, 8, 16),
+    start_date=datetime(2023, 8, 14),
     schedule_interval=config.SCHEDULE_INTERVAL_ONCE,
     concurrency=5,
     max_active_runs=1,
@@ -124,6 +124,7 @@ with TaskGroup(
     create_public_schema >> [
         create_bike_table,
         create_charging_station_table,
+        create_stops_public_transport_table,
         create_parking_table,
         create_traffic_counter_table,
         create_gpt_table,
