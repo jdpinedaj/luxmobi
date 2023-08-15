@@ -442,6 +442,7 @@ with TaskGroup(
         op_kwargs={
             "postgres_conn_id": config.POSTGRESS_CONN_ID,
             "airflow_home": config.AIRFLOW_HOME,
+            "location_data": config.LOCATION_DATA,
             "sublocation_data": config.SUBLOCATION_DEPARTURE_BOARD_DATA,
             "file_name": "raw_departure_board_data",
             "db_name": config.POSTGRES_DBNAME,
