@@ -71,7 +71,7 @@ def insert_data_to_table(
                     cls = values[5]
                     catOutS = values[6]
                     catOutL = values[7]
-                    extid = values[7]
+                    extid = values[8]
                     bus_stop = values[9]
                     latitude = values[10]
                     longitude = values[11]
