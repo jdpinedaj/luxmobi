@@ -618,7 +618,7 @@ def extraction_stops_public_transport_data(
                 "cat_out_s": product.get("catOutS", None),
                 "cat_out_l": product.get("catOutL", None),
                 "extid": stop_location.get("extId", None),
-                "bus_stop": stop_location.get("name", "").replace("'", ""),
+                "bus_stop": stop_location.get("name", "").replace(",", ""),
                 "latitude": stop_location.get("lat", None),
                 "longitude": stop_location.get("lon", None),
                 "weight": stop_location.get("weight", None),
@@ -674,13 +674,13 @@ def extraction_departure_board_data(
         cat_code = product["catCode"]
         cls = product["cls"]
         operator_code = product["operatorCode"]
-        operator = product["operator"].replace("'", "")
+        operator = product["operator"].replace(",", "")
 
         bus_name = departure["name"]
         type = departure["type"]
-        stop = departure["stop"].replace("'", "")
+        stop = departure["stop"].replace(",", "")
         stop_ext_id = departure["stopExtId"]
-        direction = departure["direction"].replace("'", "")
+        direction = departure["direction"].replace(",", "")
         train_number = departure["trainNumber"]
         train_category = departure["trainCategory"]
 
