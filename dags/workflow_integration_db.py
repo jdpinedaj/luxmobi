@@ -5,13 +5,12 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
+# from airflow.operators.python import PythonOperator
 
 # Mysql
-from airflow.providers.mysql.hooks.mysql import MySqlHook
-from airflow.providers.mysql.operators.mysql import MySqlOperator
-from scripts.transfer_data import transfer_data_mysql_to_postgres
-from custom_operators.MySqlToPostgresOperator import MySqlToPostgresOperator
+# from airflow.providers.mysql.hooks.mysql import MySqlHook
+# from airflow.providers.mysql.operators.mysql import MySqlOperator
+# from custom_operators.MySqlToPostgresOperator import MySqlToPostgresOperator
 from custom_operators.MySqlToCsvOperator import MySqlToCsvOperator
 from custom_operators.CsvToPostgresOperator import CsvToPostgresOperator
 import scripts.config as config
