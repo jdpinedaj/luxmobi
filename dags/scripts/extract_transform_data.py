@@ -674,13 +674,13 @@ def extraction_departure_board_data(
         cat_code = product["catCode"]
         cls = product["cls"]
         operator_code = product["operatorCode"]
-        operator = product["operator"]
+        operator = product["operator"].replace("'", "")
 
         bus_name = departure["name"]
         type = departure["type"]
-        stop = departure["stop"]
+        stop = departure["stop"].replace("'", "")
         stop_ext_id = departure["stopExtId"]
-        direction = departure["direction"]
+        direction = departure["direction"].replace("'", "")
         train_number = departure["trainNumber"]
         train_category = departure["trainCategory"]
 
