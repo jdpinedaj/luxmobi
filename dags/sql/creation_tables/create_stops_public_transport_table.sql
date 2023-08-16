@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS {{ params.table_name }} (
     line VARCHAR(255) NOT NULL,
     catOut VARCHAR(255) NOT NULL,
     cls INT NOT NULL,
-    catOutS INT NOT NULL,
+    catOutS VARCHAR(255) NOT NULL,
     catOutL VARCHAR(255) NOT NULL,
     extID INT NOT NULL,
     bus_stop VARCHAR(255) NOT NULL,
