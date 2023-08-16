@@ -20,6 +20,8 @@ The data sources are the different data providers that are used to feed the data
     - `Bike data`: The bike data is provided by the [jcdecaux](https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=4507a17cda9135dd36b8ff13d8a4102ab3aa44a0) service.
     - `Charging stations data`: The charging stations data is provided by the [data public lu](https://data.public.lu) service.
     - `Traffic counters data`: The traffic counters data is provided by the [cita lu](http://www.cita.lu) service.
+    - `Stops public transport data`: The stops public transport data is provided by the [mobiliteit lu](https://data.public.lu/en/datasets/api-mobiliteit-lu/) service.
+    - `Departure board data`: The departure board data is provided by the [mobiliteit lu](https://data.public.lu/en/datasets/api-mobiliteit-lu/) service.
     - `Parking data`: The parking data is provided by the [Ville de Luxembourg](https://www.vdl.lu) website.
     - `Google Popular Times data`: The Google popular Times data is provided by the [Google Maps](https://www.google.com/maps) service.
 <br/>
