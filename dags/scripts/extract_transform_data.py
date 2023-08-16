@@ -8,7 +8,7 @@ import pandas as pd
 import os
 import json
 
-# from dags.scripts.utils.logs import logger
+from .utils.logs import logger
 
 # Libraries for web scraping
 import time
@@ -37,10 +37,17 @@ def _now_times() -> tuple:
         date (str): date of the data
         hour (str): hour of the data
     """
-    now = datetime.now()
-    date = now.strftime("%Y%m%d")
-    hour = now.strftime("%H")
-    return date, hour
+    try:
+        now = datetime.now()
+        date = now.strftime("%Y%m%d")
+        hour = now.strftime("%H")
+        logger.info(f"Date: {date}, Hour: {hour}")
+
+        return date, hour
+
+    except Exception as e:
+        logger.error(f"An error occurred in _now_times: {str(e)}")
+        raise
 
 
 def _converting_and_saving_data(
@@ -66,12 +73,19 @@ def _converting_and_saving_data(
     Returns:
         None
     """
-    df = pd.DataFrame(data, columns=columns)
+    try:
+        df = pd.DataFrame(data, columns=columns)
 
-    dir_path = airflow_home + location_data + sublocation_data
-    file_path = dir_path + date + "_" + hour + "_" + file_name + ".csv"
+        dir_path = airflow_home + location_data + sublocation_data
+        file_path = dir_path + date + "_" + hour + "_" + file_name + ".csv"
 
-    df.to_csv(file_path, index=False)
+        df.to_csv(file_path, index=False)
+        logger.info(f"Data saved in {file_path}")
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred in _converting_and_saving_data: {str(e)}")
+        raise
 
 
 async def _download_site(
@@ -115,9 +129,13 @@ async def _download_site(
         async with aiofiles.open(filename, "ba") as f:
             async for content in response.content.iter_chunked(1024):
                 await f.write(content)
+
+        logger.info(f"Downloaded {url} to {filename}")
         return filename
+
     except Exception as e:
-        print(f"An error occurred with {url}: {str(e)}")
+        logger.error(f"An error occurred in _download_site: {str(e)}")
+        raise
 
 
 async def _download_all_sites(
@@ -138,35 +156,42 @@ async def _download_all_sites(
     Returns:
         None
     """
-    timeout = aiohttp.ClientTimeout(total=60 * 60)
-    connector = aiohttp.TCPConnector(limit=20)
-    async with aiohttp.ClientSession(connector=connector,
-                                     headers=config.USER_AGENT,
-                                     cookies=config.COOKIES,
-                                     timeout=timeout) as session:
-        tasks = []
-        count = 0
-        for place_identifier in places:
-            count += 1
-            if place_identifier[1]:
-                search_url = (
-                    "https://www.google.com/maps/place/?q=place_id:" +
-                    place_identifier[0] + "&hl=en")
-            else:
-                search_url = place_identifier[0]
-            task_asyn = asyncio.ensure_future(
-                _download_site(
-                    session,
-                    search_url,
-                    place_identifier[2],
-                    timestr,
-                    count,
-                    airflow_home,
-                    location_data,
-                    sublocation_cache,
-                ))
-            tasks.append(task_asyn)
-        await asyncio.gather(*tasks, return_exceptions=True)
+    try:
+        timeout = aiohttp.ClientTimeout(total=60 * 60)
+        connector = aiohttp.TCPConnector(limit=20)
+        async with aiohttp.ClientSession(connector=connector,
+                                         headers=config.USER_AGENT,
+                                         cookies=config.COOKIES,
+                                         timeout=timeout) as session:
+            tasks = []
+            count = 0
+            for place_identifier in places:
+                count += 1
+                if place_identifier[1]:
+                    search_url = (
+                        "https://www.google.com/maps/place/?q=place_id:" +
+                        place_identifier[0] + "&hl=en")
+                else:
+                    search_url = place_identifier[0]
+                task_asyn = asyncio.ensure_future(
+                    _download_site(
+                        session,
+                        search_url,
+                        place_identifier[2],
+                        timestr,
+                        count,
+                        airflow_home,
+                        location_data,
+                        sublocation_cache,
+                    ))
+                tasks.append(task_asyn)
+
+            await asyncio.gather(*tasks, return_exceptions=True)
+            logger.info("All sites downloaded")
+
+    except Exception as e:
+        logger.error(f"An error occurred in _download_all_sites: {str(e)}")
+        raise
 
 
 def _get_populartimes_from_search(place_identifier: str,
@@ -183,10 +208,19 @@ def _get_populartimes_from_search(place_identifier: str,
         popular_times (dict): popular times of the place
         time_spent (dict): time spent of the place
     """
-    with open(path + "/" + str(place_identifier) + ".txt", mode="rb") as d:
-        content = d.read()
+    try:
+        with open(path + "/" + str(place_identifier) + ".txt", mode="rb") as d:
+            content = d.read()
 
-    data = content.decode("utf-8").split('/*""*/')[0]
+        data = content.decode("utf-8").split('/*""*/')[0]
+        logger.info(f"Data retrieved from {path}/{str(place_identifier)}.txt")
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred when retrieving data from {path}/{str(place_identifier)}.txt, in _get_populartimes_from_search: {str(e)}"
+        )
+        raise
+
     try:
         idx1 = data.index("APP_INITIALIZATION_STATE=")
         data_new = data[idx1 + 25:]
@@ -257,9 +291,12 @@ def _get_populartimes_from_search(place_identifier: str,
 
             time_spent = [int(t) for t in time_spent]
 
+        logger.info(f"Data retrieved in _get_populartimes_from_search")
         return rating, rating_n, popular_times, current_popularity, time_spent
     except Exception as e:
-        raise Exception(repr(e))
+        logger.error(
+            f"An error occurred in _get_populartimes_from_search: {str(e)}")
+        raise
     # return  None,None,None,None,None
 
 
@@ -273,58 +310,65 @@ def _get_popularity_for_day(popularity: list) -> Tuple[list, list]:
         ret_popularity (list): list of popularity for each day of the week
         ret_wait (list): list of waiting time for each day of the week
     """
-    # Initialize empty matrix with 0s
-    pop_json = [[0 for _ in range(24)] for _ in range(7)]
-    wait_json = [[0 for _ in range(24)] for _ in range(7)]
+    try:
+        # Initialize empty matrix with 0s
+        pop_json = [[0 for _ in range(24)] for _ in range(7)]
+        wait_json = [[0 for _ in range(24)] for _ in range(7)]
 
-    for day in popularity:
-        day_no, pop_times = day[:2]
+        for day in popularity:
+            day_no, pop_times = day[:2]
 
-        if pop_times:
-            for hour_info in pop_times:
-                hour = hour_info[0]
-                pop_json[day_no - 1][hour] = hour_info[1]
+            if pop_times:
+                for hour_info in pop_times:
+                    hour = hour_info[0]
+                    pop_json[day_no - 1][hour] = hour_info[1]
 
-                # check if the waiting string is available and convert no minutes
-                if len(hour_info) > 5:
-                    wait_digits = re.findall(r"\d+", hour_info[3])
+                    # check if the waiting string is available and convert no minutes
+                    if len(hour_info) > 5:
+                        wait_digits = re.findall(r"\d+", hour_info[3])
 
-                    if len(wait_digits) == 0:
-                        wait_json[day_no - 1][hour] = 0
-                    elif "min" in hour_info[3]:
-                        wait_json[day_no - 1][hour] = int(wait_digits[0])
-                    elif "hour" in hour_info[3]:
-                        wait_json[day_no - 1][hour] = int(wait_digits[0]) * 60
-                    else:
-                        wait_json[day_no -
-                                  1][hour] = int(wait_digits[0]) * 60 + int(
-                                      wait_digits[1])
+                        if len(wait_digits) == 0:
+                            wait_json[day_no - 1][hour] = 0
+                        elif "min" in hour_info[3]:
+                            wait_json[day_no - 1][hour] = int(wait_digits[0])
+                        elif "hour" in hour_info[3]:
+                            wait_json[day_no -
+                                      1][hour] = int(wait_digits[0]) * 60
+                        else:
+                            wait_json[day_no - 1][hour] = int(
+                                wait_digits[0]) * 60 + int(wait_digits[1])
 
-                # day wrap
-                if hour_info[0] == 23:
-                    day_no = day_no % 7 + 1
+                    # day wrap
+                    if hour_info[0] == 23:
+                        day_no = day_no % 7 + 1
 
-    ret_popularity = [{
-        "name": list(calendar.day_name)[d],
-        "data": pop_json[d]
-    } for d in range(7)]
+        ret_popularity = [{
+            "name": list(calendar.day_name)[d],
+            "data": pop_json[d]
+        } for d in range(7)]
 
-    ret_popularity_monday = ret_popularity[0]["data"]
-    ret_popularity_tuesday = ret_popularity[1]["data"]
-    ret_popularity_wednesday = ret_popularity[2]["data"]
-    ret_popularity_thursday = ret_popularity[3]["data"]
-    ret_popularity_friday = ret_popularity[4]["data"]
-    ret_popularity_saturday = ret_popularity[5]["data"]
-    ret_popularity_sunday = ret_popularity[6]["data"]
+        ret_popularity_monday = ret_popularity[0]["data"]
+        ret_popularity_tuesday = ret_popularity[1]["data"]
+        ret_popularity_wednesday = ret_popularity[2]["data"]
+        ret_popularity_thursday = ret_popularity[3]["data"]
+        ret_popularity_friday = ret_popularity[4]["data"]
+        ret_popularity_saturday = ret_popularity[5]["data"]
+        ret_popularity_sunday = ret_popularity[6]["data"]
 
-    # waiting time only if applicable
-    ret_wait = ([{
-        "name": list(calendar.day_name)[d],
-        "data": wait_json[d]
-    } for d in range(7)] if any(any(day) for day in wait_json) else [])
+        # waiting time only if applicable
+        ret_wait = ([{
+            "name": list(calendar.day_name)[d],
+            "data": wait_json[d]
+        } for d in range(7)] if any(any(day) for day in wait_json) else [])
 
-    # {"name" : "monday", "data": [...]} for each weekday as list
-    return ret_popularity_monday, ret_popularity_tuesday, ret_popularity_wednesday, ret_popularity_thursday, ret_popularity_friday, ret_popularity_saturday, ret_popularity_sunday
+        # {"name" : "monday", "data": [...]} for each weekday as list
+
+        logger.info(f"Data retrieved in _get_popularity_for_day")
+        return ret_popularity_monday, ret_popularity_tuesday, ret_popularity_wednesday, ret_popularity_thursday, ret_popularity_friday, ret_popularity_saturday, ret_popularity_sunday
+
+    except Exception as e:
+        logger.error(f"An error occurred in _get_popularity_for_day: {str(e)}")
+        raise
 
 
 def _index_get(array: list, *argv: int) -> Any:
@@ -342,12 +386,15 @@ def _index_get(array: list, *argv: int) -> Any:
     try:
         for index in argv:
             array = array[index]
-
+        logger.info(f"Data retrieved in _index_get")
         return array
 
     # there is either no info available or no popular times
     # TypeError: rating/rating_n/populartimes wrong of not available
     except (IndexError, TypeError):
+        logger.info(
+            f"IndexError or TypeError in _index_get, returning None in _index_get"
+        )
         return None
 
 
@@ -363,19 +410,30 @@ def test_webdriver(url: str, chromedriver_path: str):
     Returns:
         None
     """
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--log-level=DEBUG")
-    prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.add_experimental_option("prefs", prefs)
-    driver = webdriver.Chrome(executable_path=chromedriver_path,
-                              options=chrome_options)
+    try:
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--log-level=DEBUG")
+        prefs = {"profile.managed_default_content_settings.images": 2}
+        chrome_options.add_experimental_option("prefs", prefs)
+        driver = webdriver.Chrome(executable_path=chromedriver_path,
+                                  options=chrome_options)
+        logger.info(f"Webdriver started in test_webdriver")
+    except Exception as e:
+        logger.error(f"An error occurred in test_webdriver: {str(e)}")
+        raise
     try:
         driver.get(url)
         time.sleep(2)
-        print(driver.title)
+        logger.info(
+            f"Data retrieved in test_webdriver, and driver title is {driver.title}"
+        )
+    except Exception as e:
+        logger.error(f"An error occurred in test_webdriver: {str(e)}")
+        raise
+
     finally:
         driver.quit()
 
@@ -403,40 +461,46 @@ def extraction_bike_data(
     Returns:
         None
     """
-    date, hour = _now_times()
-    response = requests.get(url)
-    data = json.loads(response.text)
+    try:
+        date, hour = _now_times()
+        response = requests.get(url)
+        data = json.loads(response.text)
 
-    rows = []
-    for el in data:
-        row = []
-        name = el["name"].replace("'", "")
-        latitude = el["position"]["lat"]
-        longitude = el["position"]["lng"]
-        bike_stands = el["bike_stands"]
-        available_bikes = el["available_bikes"]
-        available_bike_stands = el["available_bike_stands"]
+        rows = []
+        for el in data:
+            row = []
+            name = el["name"].replace("'", "")
+            latitude = el["position"]["lat"]
+            longitude = el["position"]["lng"]
+            bike_stands = el["bike_stands"]
+            available_bikes = el["available_bikes"]
+            available_bike_stands = el["available_bike_stands"]
 
-        row.append(name)
-        row.append(date)
-        row.append(hour)
-        row.append(latitude)
-        row.append(longitude)
-        row.append(bike_stands)
-        row.append(available_bikes)
-        row.append(available_bike_stands)
-        rows.append(row)
+            row.append(name)
+            row.append(date)
+            row.append(hour)
+            row.append(latitude)
+            row.append(longitude)
+            row.append(bike_stands)
+            row.append(available_bikes)
+            row.append(available_bike_stands)
+            rows.append(row)
 
-    _converting_and_saving_data(
-        rows,
-        columns,
-        airflow_home,
-        location_data,
-        sublocation_data,
-        file_name,
-        date,
-        hour,
-    )
+        _converting_and_saving_data(
+            rows,
+            columns,
+            airflow_home,
+            location_data,
+            sublocation_data,
+            file_name,
+            date,
+            hour,
+        )
+        logger.info(f"Data retrieved in extraction_bike_data")
+
+    except Exception as e:
+        logger.error(f"An error occurred in extraction_bike_data: {str(e)}")
+        raise
 
 
 def extraction_charging_station_data(
@@ -459,48 +523,55 @@ def extraction_charging_station_data(
     Returns:
         None
     """
-    date, hour = _now_times()
+    try:
+        date, hour = _now_times()
 
-    dom = minidom.parse(ur.urlopen(url))
-    owned = dom.getElementsByTagName("Placemark")
+        dom = minidom.parse(ur.urlopen(url))
+        owned = dom.getElementsByTagName("Placemark")
 
-    rows = []
-    for el in owned:
-        row = []
+        rows = []
+        for el in owned:
+            row = []
 
-        latitude = el.getElementsByTagName(
-            "coordinates")[0].firstChild.data.split(",")[1]
-        longitude = el.getElementsByTagName(
-            "coordinates")[0].firstChild.data.split(",")[0]
-        address = (
-            el.getElementsByTagName("address")[0].firstChild.nodeValue.replace(
-                ",", "").replace("'", ""))
-        occupied = (
-            el.getElementsByTagName("description")[0].firstChild.nodeValue.
-            split("occupied connectors")[0].split("</b>")[-2].split("<b>")[-1])
-        available = (el.getElementsByTagName(
-            "description")[0].firstChild.nodeValue.split(
-                "available connectors")[0].split("</b>")[-2].split("<b>")[-1])
+            latitude = el.getElementsByTagName(
+                "coordinates")[0].firstChild.data.split(",")[1]
+            longitude = el.getElementsByTagName(
+                "coordinates")[0].firstChild.data.split(",")[0]
+            address = (el.getElementsByTagName("address")
+                       [0].firstChild.nodeValue.replace(",",
+                                                        "").replace("'", ""))
+            occupied = (el.getElementsByTagName("description")
+                        [0].firstChild.nodeValue.split("occupied connectors")
+                        [0].split("</b>")[-2].split("<b>")[-1])
+            available = (el.getElementsByTagName("description")
+                         [0].firstChild.nodeValue.split("available connectors")
+                         [0].split("</b>")[-2].split("<b>")[-1])
 
-        row.append(date)
-        row.append(hour)
-        row.append(latitude)
-        row.append(longitude)
-        row.append(address)
-        row.append(occupied)
-        row.append(available)
-        rows.append(row)
+            row.append(date)
+            row.append(hour)
+            row.append(latitude)
+            row.append(longitude)
+            row.append(address)
+            row.append(occupied)
+            row.append(available)
+            rows.append(row)
 
-    _converting_and_saving_data(
-        rows,
-        columns,
-        airflow_home,
-        location_data,
-        sublocation_data,
-        file_name,
-        date,
-        hour,
-    )
+        _converting_and_saving_data(
+            rows,
+            columns,
+            airflow_home,
+            location_data,
+            sublocation_data,
+            file_name,
+            date,
+            hour,
+        )
+        logger.info(f"Data retrieved in extraction_charging_station_data")
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred in extraction_charging_station_data: {str(e)}")
+        raise
 
 
 def extraction_traffic_counter_data(
@@ -523,56 +594,67 @@ def extraction_traffic_counter_data(
     Returns:
         None
     """
-    date, hour = _now_times()
+    try:
+        date, hour = _now_times()
 
-    dom = minidom.parse(ur.urlopen(url))
-    owned = dom.getElementsByTagName("siteMeasurements")
+        dom = minidom.parse(ur.urlopen(url))
+        owned = dom.getElementsByTagName("siteMeasurements")
 
-    rows = []
-    for el in owned:
-        row = []
+        rows = []
+        for el in owned:
+            row = []
 
-        id = el.getElementsByTagName(
-            "measurementSiteReference")[0].getAttribute("id")
-        latitude = el.getElementsByTagName("latitude")[0].firstChild.nodeValue
-        longitude = el.getElementsByTagName(
-            "longitude")[0].firstChild.nodeValue
-        road = el.getElementsByTagName("roadNumber")[0].firstChild.nodeValue
-        direction_tags = dom.getElementsByTagName(
-            "directionBoundOnLinearSection")
-        if direction_tags:
-            direction = direction_tags[0].firstChild.nodeValue
-        else:
-            direction = None
+            id = el.getElementsByTagName(
+                "measurementSiteReference")[0].getAttribute("id")
+            latitude = el.getElementsByTagName(
+                "latitude")[0].firstChild.nodeValue
+            longitude = el.getElementsByTagName(
+                "longitude")[0].firstChild.nodeValue
+            road = el.getElementsByTagName(
+                "roadNumber")[0].firstChild.nodeValue
+            direction_tags = dom.getElementsByTagName(
+                "directionBoundOnLinearSection")
+            if direction_tags:
+                direction = direction_tags[0].firstChild.nodeValue
+            else:
+                direction = None
 
-        percentage = el.getElementsByTagName(
-            "percentage")[0].firstChild.nodeValue
-        speed = el.getElementsByTagName("speed")[0].firstChild.nodeValue
-        vehicle_flow_rate = el.getElementsByTagName(
-            "vehicleFlowRate")[0].firstChild.nodeValue
+            percentage = el.getElementsByTagName(
+                "percentage")[0].firstChild.nodeValue
+            speed = el.getElementsByTagName("speed")[0].firstChild.nodeValue
+            vehicle_flow_rate = el.getElementsByTagName(
+                "vehicleFlowRate")[0].firstChild.nodeValue
 
-        row.append(date)
-        row.append(hour)
-        row.append(id)
-        row.append(latitude)
-        row.append(longitude)
-        row.append(road)
-        row.append(direction)
-        row.append(percentage)
-        row.append(speed)
-        row.append(vehicle_flow_rate)
-        rows.append(row)
+            row.append(date)
+            row.append(hour)
+            row.append(id)
+            row.append(latitude)
+            row.append(longitude)
+            row.append(road)
+            row.append(direction)
+            row.append(percentage)
+            row.append(speed)
+            row.append(vehicle_flow_rate)
+            rows.append(row)
 
-    _converting_and_saving_data(
-        rows,
-        columns,
-        airflow_home,
-        location_data,
-        sublocation_data,
-        file_name,
-        date,
-        hour,
-    )
+        _converting_and_saving_data(
+            rows,
+            columns,
+            airflow_home,
+            location_data,
+            sublocation_data,
+            file_name,
+            date,
+            hour,
+        )
+
+        logger.info(f"Data retrieved in extraction_traffic_counter_data")
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred in extraction_traffic_counter_data: {str(e)}")
+        raise
+
 
 def extraction_stops_public_transport_data(
     url: str,
@@ -594,49 +676,60 @@ def extraction_stops_public_transport_data(
     Returns:
         None
     """
-    date, hour = _now_times()
-    response = requests.get(url)
-    data = json.loads(response.text)
+    try:
+        date, hour = _now_times()
+        response = requests.get(url)
+        data = json.loads(response.text)
 
-    columns = [
-    "date", "hour", "name", "line", "cat_out", "cls", "cat_out_s",
-    "cat_out_l", "extid", "bus_stop", "latitude", "longitude", 
-    "weight", "dist", "products"
-]
-    rows = []
-    for location in data['stopLocationOrCoordLocation']:
-        stop_location = location.get('StopLocation', {})
-        if 'productAtStop' in stop_location:
-            for product in stop_location['productAtStop']:
-                row_data = {
-                "date": date,
-                "hour": hour,
-                "name": product.get("name", None),
-                "line": product.get("line", None),
-                "cat_out": product.get("catOut", None),
-                "cls": product.get("cls", None),
-                "cat_out_s": product.get("catOutS", None),
-                "cat_out_l": product.get("catOutL", None),
-                "extid": stop_location.get("extId", None),
-                "bus_stop": stop_location.get("name", "").replace(",", ""),
-                "latitude": stop_location.get("lat", None),
-                "longitude": stop_location.get("lon", None),
-                "weight": stop_location.get("weight", None),
-                "dist": stop_location.get("dist", None),
-                "products": stop_location.get("products", None)
-            }
-                rows.append([row_data[col] for col in columns])
+        columns = [
+            "date", "hour", "name", "line", "cat_out", "cls", "cat_out_s",
+            "cat_out_l", "extid", "bus_stop", "latitude", "longitude",
+            "weight", "dist", "products"
+        ]
+        rows = []
+        for location in data['stopLocationOrCoordLocation']:
+            stop_location = location.get('StopLocation', {})
+            if 'productAtStop' in stop_location:
+                for product in stop_location['productAtStop']:
+                    row_data = {
+                        "date": date,
+                        "hour": hour,
+                        "name": product.get("name", None),
+                        "line": product.get("line", None),
+                        "cat_out": product.get("catOut", None),
+                        "cls": product.get("cls", None),
+                        "cat_out_s": product.get("catOutS", None),
+                        "cat_out_l": product.get("catOutL", None),
+                        "extid": stop_location.get("extId", None),
+                        "bus_stop": stop_location.get("name",
+                                                      "").replace(",", ""),
+                        "latitude": stop_location.get("lat", None),
+                        "longitude": stop_location.get("lon", None),
+                        "weight": stop_location.get("weight", None),
+                        "dist": stop_location.get("dist", None),
+                        "products": stop_location.get("products", None)
+                    }
+                    rows.append([row_data[col] for col in columns])
 
-    _converting_and_saving_data(
-        rows,
-        columns,
-        airflow_home,
-        location_data,
-        sublocation_data,
-        file_name,
-        date,
-        hour,
-    )
+        _converting_and_saving_data(
+            rows,
+            columns,
+            airflow_home,
+            location_data,
+            sublocation_data,
+            file_name,
+            date,
+            hour,
+        )
+        logger.info(
+            f"Data retrieved in extraction_stops_public_transport_data")
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred in extraction_stops_public_transport_data: {str(e)}"
+        )
+        raise
+
 
 def extraction_departure_board_data(
     url: str,
@@ -658,63 +751,71 @@ def extraction_departure_board_data(
     Returns:
         None
     """
-    date, hour = _now_times()
-    response = requests.get(url)
-    data = json.loads(response.text)
+    try:
+        date, hour = _now_times()
+        response = requests.get(url)
+        data = json.loads(response.text)
 
-    rows = []
-    for departure in data['Departure']:
-        product = departure['Product']
-        row = []
-        name = product["name"]
-        num = product["num"]
-        line = product["line"]
-        cat_out = product["catOut"]
-        cat_in = product["catIn"]
-        cat_code = product["catCode"]
-        cls = product["cls"]
-        operator_code = product["operatorCode"]
-        operator = product["operator"].replace(",", "")
+        rows = []
+        for departure in data['Departure']:
+            product = departure['Product']
+            row = []
+            name = product["name"]
+            num = product["num"]
+            line = product["line"]
+            cat_out = product["catOut"]
+            cat_in = product["catIn"]
+            cat_code = product["catCode"]
+            cls = product["cls"]
+            operator_code = product["operatorCode"]
+            operator = product["operator"].replace(",", "")
 
-        bus_name = departure["name"]
-        type = departure["type"]
-        stop = departure["stop"].replace(",", "")
-        stop_ext_id = departure["stopExtId"]
-        direction = departure["direction"].replace(",", "")
-        train_number = departure["trainNumber"]
-        train_category = departure["trainCategory"]
+            bus_name = departure["name"]
+            type = departure["type"]
+            stop = departure["stop"].replace(",", "")
+            stop_ext_id = departure["stopExtId"]
+            direction = departure["direction"].replace(",", "")
+            train_number = departure["trainNumber"]
+            train_category = departure["trainCategory"]
 
-        row.append(date)
-        row.append(hour)
-        row.append(name)
-        row.append(num)
-        row.append(line)
-        row.append(cat_out)
-        row.append(cat_in)
-        row.append(cat_code)
-        row.append(cls)
-        row.append(operator_code)
-        row.append(operator)
-        row.append(bus_name)
-        row.append(type)
-        row.append(stop)
-        row.append(stop_ext_id)
-        row.append(direction)
-        row.append(train_number)
-        row.append(train_category)
+            row.append(date)
+            row.append(hour)
+            row.append(name)
+            row.append(num)
+            row.append(line)
+            row.append(cat_out)
+            row.append(cat_in)
+            row.append(cat_code)
+            row.append(cls)
+            row.append(operator_code)
+            row.append(operator)
+            row.append(bus_name)
+            row.append(type)
+            row.append(stop)
+            row.append(stop_ext_id)
+            row.append(direction)
+            row.append(train_number)
+            row.append(train_category)
 
-        rows.append(row)
+            rows.append(row)
 
-    _converting_and_saving_data(
-        rows,
-        columns,
-        airflow_home,
-        location_data,
-        sublocation_data,
-        file_name,
-        date,
-        hour,
-    )
+        _converting_and_saving_data(
+            rows,
+            columns,
+            airflow_home,
+            location_data,
+            sublocation_data,
+            file_name,
+            date,
+            hour,
+        )
+
+        logger.info(f"Data retrieved in extraction_departure_board_data")
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred in extraction_departure_board_data: {str(e)}")
+        raise
 
 
 def extraction_parking_data(
@@ -739,17 +840,26 @@ def extraction_parking_data(
     Returns:
         None
     """
-    date, hour = _now_times()
+    try:
+        date, hour = _now_times()
 
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--log-level=DEBUG")
-    prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.add_experimental_option("prefs", prefs)
-    driver = webdriver.Chrome(executable_path=chromedriver_path,
-                              options=chrome_options)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--log-level=DEBUG")
+        prefs = {"profile.managed_default_content_settings.images": 2}
+        chrome_options.add_experimental_option("prefs", prefs)
+        driver = webdriver.Chrome(executable_path=chromedriver_path,
+                                  options=chrome_options)
+
+        logger.info(f"Extracting data from {url}")
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred when opening the browser in extraction_parking_data: {str(e)}"
+        )
+        raise
 
     try:
         driver.get(url)
@@ -809,6 +919,11 @@ def extraction_parking_data(
             date,
             hour,
         )
+        logger.info(f"Data retrieved in extraction_parking_data")
+
+    except Exception as e:
+        logger.error(f"An error occurred in extraction_parking_data: {str(e)}")
+        raise
 
     finally:
         driver.quit()
@@ -1018,6 +1133,8 @@ def extraction_gpt_data(
         # Delete the cache
         shutil.rmtree(dir_path_gpt + timestr)
 
+        logger.info(f"Data retrieved in extraction_gpt_data")
+
     except Exception as e:
-        print(e)
-        print("Error in extraction_gpt_data")
+        logger.error(f"An error occurred in extraction_gpt_data: {str(e)}")
+        raise
