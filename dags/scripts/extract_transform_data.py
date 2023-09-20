@@ -694,7 +694,7 @@ def extraction_stops_public_transport_data(
                     row_data = {
                         "date": date,
                         "hour": hour,
-                        "name": product.get("name", None),
+                        "name": product.get("name", None).replace(",", "").replace("'", ""),
                         "line": product.get("line", None),
                         "cat_out": product.get("catOut", None),
                         "cls": product.get("cls", None),
@@ -702,7 +702,7 @@ def extraction_stops_public_transport_data(
                         "cat_out_l": product.get("catOutL", None),
                         "extid": stop_location.get("extId", None),
                         "bus_stop": stop_location.get("name",
-                                                      "").replace(",", ""),
+                                                      "").replace(",", "").replace("'", ""),
                         "latitude": stop_location.get("lat", None),
                         "longitude": stop_location.get("lon", None),
                         "weight": stop_location.get("weight", None),
@@ -1131,7 +1131,7 @@ def extraction_gpt_data(
         )
 
         # Delete the cache
-        shutil.rmtree(dir_path_gpt + timestr)
+        # shutil.rmtree(dir_path_gpt + timestr)
 
         logger.info(f"Data retrieved in extraction_gpt_data")
 
