@@ -42,9 +42,8 @@ default_args = {
 dag = DAG(
     dag_id="workflow_ETL",
     description="workflow_ETL",
-    start_date=datetime(2023, 8, 14, 7, 0, 0),
-    #TODO: Once it is testes, change to config.SCHEDULE_INTERVAL_HOURLY
-    schedule_interval=config.SCHEDULE_INTERVAL_ONCE,
+    start_date=datetime(2023, 9, 20, 8, 0, 0),
+    schedule_interval=config.SCHEDULE_INTERVAL_HOURLY, # SCHEDULE_INTERVAL_HOURLY or SCHEDULE_INTERVAL_ONCE
     concurrency=5,
     max_active_runs=1,
     default_args=default_args,
