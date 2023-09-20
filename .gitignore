@@ -3,6 +3,7 @@ dags/data/bike_data/*
 dags/data/charging_station_data/*
 dags/data/parking_data/*
 dags/data/traffic_counter_data/*
+dags/data/departure_board_data/*
 dags/data/gpt_data/*
 dags/data/stops_public_transport_data/*
 dags/data/traffic_counter_data/*
@@ -15,6 +16,7 @@ dags/data/csv_files/
 !dags/data/gpt_data/.gitkeep
 !dags/data/stops_public_transport_data/.gitkeep
 !dags/data/traffic_counter_data/.gitkeep
+!dags/data/departure_board_data/.gitkeep
 
 # cache
 __pycache__
@@ -43,11 +45,9 @@ previous_files/
 .idea
 .env
 poetry.lock
-pyproject.toml
+# pyproject.toml
 readme-resources/*
 !readme-resources/framework.png
-# dags/scripts/config.py
-# dags/scripts/gpt_locations.py
 dags/scripts/transfer_data.py
 
 

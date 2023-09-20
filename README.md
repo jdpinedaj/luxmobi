@@ -101,9 +101,9 @@ echo -e "AIRFLOW_UID=$(id -u)" > .env
 
 First, start docker desktop:
     
-    ```
-    systemctl --user enable docker-desktop
-    ```
+```
+systemctl --user enable docker-desktop
+```
 
 On all operating systems, you need to run database migrations and create the first user account. To do it, run.
 
