@@ -7,7 +7,7 @@ CREATE SCHEMA IF NOT EXISTS {{ params.schema_name }};
 
 -- -- Revoke privileges for the regular_user role on the luxmobi database
 --?  This line should be commented out if the database is not created yet
--- REVOKE ALL PRIVILEGES ON DATABASE luxmobi FROM regular_user;
+REVOKE ALL PRIVILEGES ON DATABASE luxmobi FROM regular_user;
 
 
 -- Remove the roles if they exist

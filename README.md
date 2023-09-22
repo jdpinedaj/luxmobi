@@ -140,8 +140,8 @@ If you want to install python requirements to the airflow container after the in
 
 #### 7. Accessing the environment via a browser using the web interface
 
-Check http://localhost:8080
-Or http://host.docker.internal:8080 
+Check http://localhost:8081
+Or http://host.docker.internal:8081
 
 #### 8. Airflow connection and Postgres Operator
 
