@@ -757,6 +757,13 @@ def extraction_departure_board_data(
         data = json.loads(response.text)
 
         rows = []
+
+        # Check if there are departures before processing
+        if not data['Departure']:
+            logger.warning(
+                f"No departures found in extraction_departure_board_data")
+            return
+
         for departure in data['Departure']:
             product = departure['Product']
             row = []
