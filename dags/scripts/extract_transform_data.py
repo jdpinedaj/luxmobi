@@ -759,9 +759,9 @@ def extraction_departure_board_data(
         rows = []
 
         # Check if there are departures before processing
-        if not data['Departure']:
+        if not data.get('Departure', None):
             logger.warning(
-                f"No departures found in extraction_departure_board_data")
+                f"No departures found in the received data, using extraction_departure_board_data method")
             return
 
         for departure in data['Departure']:
