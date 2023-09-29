@@ -19,7 +19,6 @@ from scripts.extract_transform_data import (
 )
 from scripts.load_data import insert_data_to_table
 import scripts.config as config
-import os
 
 #######################
 ##! 2. Default arguments

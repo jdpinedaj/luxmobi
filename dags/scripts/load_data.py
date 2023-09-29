@@ -1,9 +1,10 @@
+from datetime import datetime
+import os
 from typing import Optional
 
 from .utils.logs import logger
 
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from datetime import datetime
 
 
 def insert_data_to_table(
@@ -40,9 +41,14 @@ def insert_data_to_table(
         hour = now.strftime("%H")
 
         hook = PostgresHook(postgres_conn_id=postgres_conn_id)
+        file_full_name = airflow_home + location_data + sublocation_data + date + "_" + hour + "_" + file_name + ".csv"
+        
+        if not os.path.exists(file_full_name):
+            logger.warning(f"The CSV file {file_full_name} does not exist.")
+            return
+        
         with open(
-                airflow_home + location_data + sublocation_data + date + "_" +
-                hour + "_" + file_name + ".csv",
+                file_full_name,
                 'r',
         ) as f:
             if hook.get_records(
