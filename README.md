@@ -47,6 +47,17 @@ The entire pipeline is containerized using [Docker](https://www.docker.com/), an
 Finally, all the resources are stored in a [GitHub](https://github.com/jdpinedaj/luxmobi) repository.
 
 
+## Workflows
+There are four workflows in the data portal:
+
+- **workflow_create_tables**: This workflow creates the tables in the database. This is the first workflow that should be executed, and it is executed only once.
+It is important to note that this workflow includes, among others, the execution of the file `sql/create_schemas.sql`, which creates the schemas in the database. It is necessary to comment one line in this file to execute it successfully for the first time, as it is explained in the file itself.
+
+- **workflow_ETL**: This workflow performs the ETL process for each data source. It is executed every day at 00:00, and it is necessary to mention that the start_date of the DAG has to be set to the current date for the first time it is executed, as mentioned in the file itself.
+
+- **workflow_load_csv_data**: In case the airflow server is down for some reason, this workflow can be executed to load the data from the CSV files that were already created by the previous workflow. It is important to note that this workflow should be executed only once, as a backup solution.
+
+- **workflow_integration_db**: This workflow performs the integration of the data from the previous MySQL database to the current PostgreSQL database. It is important to note that this workflow should be executed only once, as a backup solution. And still has to be tested.
 
 <!-- ---
 ## Connecting to the PostgreSQL database
