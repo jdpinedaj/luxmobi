@@ -15,7 +15,7 @@ from scripts.extract_transform_data import (
     extraction_charging_station_data,
     extraction_traffic_counter_data,
     extraction_parking_data,
-    extraction_gpt_data,   
+    extraction_gpt_data,
 )
 from scripts.load_data import insert_data_to_table
 import scripts.config as config
@@ -42,7 +42,7 @@ dag = DAG(
     dag_id="workflow_ETL",
     description="workflow_ETL",
     start_date=datetime(2023, 9, 20, 8, 0, 0),
-    schedule_interval=config.SCHEDULE_INTERVAL_HOURLY, # SCHEDULE_INTERVAL_HOURLY or SCHEDULE_INTERVAL_ONCE
+    schedule_interval=config.SCHEDULE_INTERVAL_HOURLY,  # SCHEDULE_INTERVAL_HOURLY or SCHEDULE_INTERVAL_ONCE
     concurrency=5,
     max_active_runs=1,
     default_args=default_args,
@@ -172,15 +172,15 @@ with TaskGroup(
             "location_data": config.LOCATION_DATA,
             "sublocation_data": config.SUBLOCATION_CHARGING_STATION_DATA,
             "file_name": "raw_charging_station_data",
-            "columns" : [
-        "date",
-        "hour",
-        "latitude",
-        "longitude",
-        "address",
-        "occupied",
-        "available",
-    ]
+            "columns": [
+                "date",
+                "hour",
+                "latitude",
+                "longitude",
+                "address",
+                "occupied",
+                "available",
+            ],
         },
         dag=dag,
     )
@@ -195,17 +195,17 @@ with TaskGroup(
             "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_1",
             "columns": [
-        "date",
-        "hour",
-        "id",
-        "latitude",
-        "longitude",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
+                "date",
+                "hour",
+                "id",
+                "latitude",
+                "longitude",
+                "road",
+                "direction",
+                "percentage",
+                "speed",
+                "vehicle_flow_rate",
+            ],
         },
         dag=dag,
     )
@@ -220,17 +220,17 @@ with TaskGroup(
             "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_2",
             "columns": [
-        "date",
-        "hour",
-        "id",
-        "latitude",
-        "longitude",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
+                "date",
+                "hour",
+                "id",
+                "latitude",
+                "longitude",
+                "road",
+                "direction",
+                "percentage",
+                "speed",
+                "vehicle_flow_rate",
+            ],
         },
         dag=dag,
     )
@@ -245,17 +245,17 @@ with TaskGroup(
             "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_3",
             "columns": [
-        "date",
-        "hour",
-        "id",
-        "latitude",
-        "longitude",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
+                "date",
+                "hour",
+                "id",
+                "latitude",
+                "longitude",
+                "road",
+                "direction",
+                "percentage",
+                "speed",
+                "vehicle_flow_rate",
+            ],
         },
         dag=dag,
     )
@@ -270,17 +270,17 @@ with TaskGroup(
             "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_4",
             "columns": [
-        "date",
-        "hour",
-        "id",
-        "latitude",
-        "longitude",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
+                "date",
+                "hour",
+                "id",
+                "latitude",
+                "longitude",
+                "road",
+                "direction",
+                "percentage",
+                "speed",
+                "vehicle_flow_rate",
+            ],
         },
         dag=dag,
     )
@@ -295,17 +295,17 @@ with TaskGroup(
             "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_5",
             "columns": [
-        "date",
-        "hour",
-        "id",
-        "latitude",
-        "longitude",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
+                "date",
+                "hour",
+                "id",
+                "latitude",
+                "longitude",
+                "road",
+                "direction",
+                "percentage",
+                "speed",
+                "vehicle_flow_rate",
+            ],
         },
         dag=dag,
     )
@@ -320,17 +320,17 @@ with TaskGroup(
             "sublocation_data": config.SUBLOCATION_TRAFFIC_COUNTER_DATA,
             "file_name": "raw_traffic_counter_data_6",
             "columns": [
-        "date",
-        "hour",
-        "id",
-        "latitude",
-        "longitude",
-        "road",
-        "direction",
-        "percentage",
-        "speed",
-        "vehicle_flow_rate",
-    ]
+                "date",
+                "hour",
+                "id",
+                "latitude",
+                "longitude",
+                "road",
+                "direction",
+                "percentage",
+                "speed",
+                "vehicle_flow_rate",
+            ],
         },
         dag=dag,
     )
@@ -464,9 +464,8 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "charging_station",
-            "columns_table":
-            "date, hour, latitude, longitude, address, occupied, available",
-            "data_type": "charging_station"
+            "columns_table": "date, hour, latitude, longitude, address, occupied, available",
+            "data_type": "charging_station",
         },
         dag=dag,
     )
@@ -483,9 +482,8 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
+            "columns_table": "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+            "data_type": "traffic_counter",
         },
         dag=dag,
     )
@@ -502,9 +500,8 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
+            "columns_table": "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+            "data_type": "traffic_counter",
         },
         dag=dag,
     )
@@ -521,9 +518,8 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
+            "columns_table": "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+            "data_type": "traffic_counter",
         },
         dag=dag,
     )
@@ -540,9 +536,8 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
+            "columns_table": "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+            "data_type": "traffic_counter",
         },
         dag=dag,
     )
@@ -559,9 +554,8 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
+            "columns_table": "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+            "data_type": "traffic_counter",
         },
         dag=dag,
     )
@@ -578,9 +572,8 @@ with TaskGroup(
             "db_name": config.POSTGRES_DBNAME,
             "schema_name": "raw",
             "table_name": "traffic_counter",
-            "columns_table":
-            "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
-            "data_type": "traffic_counter"
+            "columns_table": "date, hour, id, latitude, longitude, road, direction, percentage, speed, vehicle_flow_rate",
+            "data_type": "traffic_counter",
         },
         dag=dag,
     )

@@ -61,15 +61,14 @@ start_pipeline = DummyOperator(
 # ? 4.2. Creating empty tables
 
 with TaskGroup(
-        "create_tables",
-        dag=dag,
+    "create_tables",
+    dag=dag,
 ) as create_tables:
     create_public_schema = PostgresOperator(
         task_id="create_public_schema",
         postgres_conn_id="postgres_default",
         sql="sql/create_schema.sql",
-        params={"database_name": "luxmobi",
-        "schema_name": "raw"},
+        params={"database_name": "luxmobi", "schema_name": "raw"},
         dag=dag,
     )
 

@@ -9,7 +9,7 @@ LOGGING_ENV_EQUIVALENCE = {
     "DEBUG": logging.DEBUG,
     "CRITICAL": logging.CRITICAL,
     "FATAL": logging.FATAL,
-    "NOTSET": logging.NOTSET
+    "NOTSET": logging.NOTSET,
 }
 
 

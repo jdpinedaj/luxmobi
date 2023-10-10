@@ -41,23 +41,36 @@ def insert_data_to_table(
         hour = now.strftime("%H")
 
         hook = PostgresHook(postgres_conn_id=postgres_conn_id)
-        file_full_name = airflow_home + location_data + sublocation_data + date + "_" + hour + "_" + file_name + ".csv"
-        
+        file_full_name = (
+            airflow_home
+            + location_data
+            + sublocation_data
+            + date
+            + "_"
+            + hour
+            + "_"
+            + file_name
+            + ".csv"
+        )
+
         if not os.path.exists(file_full_name):
             logger.warning(f"The CSV file {file_full_name} does not exist.")
             return
-        
+
         with open(
-                file_full_name,
-                'r',
+            file_full_name,
+            "r",
         ) as f:
-            if hook.get_records(
+            if (
+                hook.get_records(
                     f"SELECT * FROM {db_name}.{schema_name}.{table_name} WHERE date = '{date}' and hour = '{hour}'"
-            ) == []:
+                )
+                == []
+            ):
                 next(f)  # Skip the header row
                 for line in f:
-                    values = line.strip().split(',')
-                    if data_type == 'bike':
+                    values = line.strip().split(",")
+                    if data_type == "bike":
                         name = values[0]
                         date = values[1]
                         hour = values[2]
@@ -67,9 +80,9 @@ def insert_data_to_table(
                         bike_available = values[6]
                         bike_stands_available = values[7]
 
-                        sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{name}\', \'{date}\', \'{hour}\', \'{latitude}\', \'{longitude}\', \'{total_bike_stand}\', \'{bike_available}\', \'{bike_stands_available}\')'
+                        sql = f"INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES ('{name}', '{date}', '{hour}', '{latitude}', '{longitude}', '{total_bike_stand}', '{bike_available}', '{bike_stands_available}')"
 
-                    elif data_type == 'stops_public_transport':
+                    elif data_type == "stops_public_transport":
                         date = values[0]
                         hour = values[1]
                         name = values[2]
@@ -86,9 +99,9 @@ def insert_data_to_table(
                         dist = values[13]
                         products = values[14]
 
-                        sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{name}\', \'{line}\', \'{catOut}\', \'{cls}\', \'{catOutS}\', \'{catOutL}\', \'{extid}\', \'{bus_stop}\', \'{latitude}\', \'{longitude}\', \'{weight}\', \'{dist}\', \'{products}\')'
+                        sql = f"INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES ('{date}', '{hour}', '{name}', '{line}', '{catOut}', '{cls}', '{catOutS}', '{catOutL}', '{extid}', '{bus_stop}', '{latitude}', '{longitude}', '{weight}', '{dist}', '{products}')"
 
-                    elif data_type == 'departure_board':
+                    elif data_type == "departure_board":
                         date = values[0]
                         hour = values[1]
                         name = values[2]
@@ -108,9 +121,9 @@ def insert_data_to_table(
                         trainNumber = values[16]
                         trainCategory = values[17]
 
-                        sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{name}\', \'{num}\', \'{line}\', \'{catOut}\', \'{catIn}\', \'{catCode}\', \'{cls}\', \'{operatorCode}\', \'{operator}\', \'{busName}\', \'{type}\', \'{stop}\', \'{stopExtId}\', \'{direction}\', \'{trainNumber}\', \'{trainCategory}\')'
+                        sql = f"INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES ('{date}', '{hour}', '{name}', '{num}', '{line}', '{catOut}', '{catIn}', '{catCode}', '{cls}', '{operatorCode}', '{operator}', '{busName}', '{type}', '{stop}', '{stopExtId}', '{direction}', '{trainNumber}', '{trainCategory}')"
 
-                    elif data_type == 'charging_station':
+                    elif data_type == "charging_station":
                         date = values[0]
                         hour = values[1]
                         latitude = values[2]
@@ -119,9 +132,9 @@ def insert_data_to_table(
                         occupied = values[5]
                         available = values[6]
 
-                        sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{latitude}\', \'{longitude}\', \'{address}\', \'{occupied}\', \'{available}\')'
+                        sql = f"INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES ('{date}', '{hour}', '{latitude}', '{longitude}', '{address}', '{occupied}', '{available}')"
 
-                    elif data_type == 'traffic_counter':
+                    elif data_type == "traffic_counter":
                         date = values[0]
                         hour = values[1]
                         id = values[2]
@@ -133,9 +146,9 @@ def insert_data_to_table(
                         speed = values[8]
                         vehicle_flow_rate = values[9]
 
-                        sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{id}\', \'{latitude}\', \'{longitude}\', \'{road}\', \'{direction}\', \'{percentage}\', \'{speed}\', \'{vehicle_flow_rate}\')'
+                        sql = f"INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES ('{date}', '{hour}', '{id}', '{latitude}', '{longitude}', '{road}', '{direction}', '{percentage}', '{speed}', '{vehicle_flow_rate}')"
 
-                    elif data_type == 'parking':
+                    elif data_type == "parking":
                         date = values[0]
                         hour = values[1]
                         name = values[2]
@@ -144,9 +157,9 @@ def insert_data_to_table(
                         occupancy = values[5]
                         trend = values[6]
 
-                        sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{name}\', \'{available}\', \'{total}\', \'{occupancy}\', \'{trend}\')'
+                        sql = f"INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES ('{date}', '{hour}', '{name}', '{available}', '{total}', '{occupancy}', '{trend}')"
 
-                    elif data_type == 'gpt':
+                    elif data_type == "gpt":
                         date = values[0]
                         hour = values[1]
                         place_id = values[2]
@@ -166,7 +179,7 @@ def insert_data_to_table(
                         live = values[16]
                         duration = values[17]
 
-                        sql = f'INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES (\'{date}\', \'{hour}\', \'{place_id}\', \'{name}\', \'{latitude}\', \'{longitude}\', \'{city}\', \'{rating}\', \'{rating_n}\', \'{popularity_monday}\', \'{popularity_tuesday}\', \'{popularity_wednesday}\', \'{popularity_thursday}\', \'{popularity_friday}\', \'{popularity_saturday}\', \'{popularity_sunday}\', \'{live}\', \'{duration}\')'
+                        sql = f"INSERT INTO {db_name}.{schema_name}.{table_name} ({columns_table}) VALUES ('{date}', '{hour}', '{place_id}', '{name}', '{latitude}', '{longitude}', '{city}', '{rating}', '{rating_n}', '{popularity_monday}', '{popularity_tuesday}', '{popularity_wednesday}', '{popularity_thursday}', '{popularity_friday}', '{popularity_saturday}', '{popularity_sunday}', '{live}', '{duration}')"
 
                     else:
                         raise ValueError("Invalid data type")
@@ -180,4 +193,62 @@ def insert_data_to_table(
 
     except Exception as e:
         logger.error(f"Error while loading data in table {table_name}: {e}")
+        raise
+
+
+def load_all_csv_files(
+    postgres_conn_id: str,
+    db_name: str,
+    schema_name: str,
+    table_name: str,
+    columns_table: str,
+    airflow_home: str,
+    location_data: str,
+    sublocation_data: str,
+    data_type: Optional[str] = None,
+) -> None:
+    """
+    This function loads all CSV files in a directory into a table in the database.
+    Args:
+        postgres_conn_id (str): postgres connection id
+        db_name (str): name of the database
+        schema_name (str): name of the schema
+        table_name (str): name of the table
+        columns_table (str): columns of the table
+        airflow_home (str): path to airflow home
+        location_data (str): path to location data
+        sublocation_data (str): path to sublocation data
+        data_type (str): type of data being inserted. Possible values: 'bike', 'stops_public_transport', 'departure_board', 'charging_station', 'traffic_counter', 'parking', 'gpt'
+    Returns:
+        None
+    """
+    try:
+        directory_path = os.path.join(airflow_home, location_data, sublocation_data)
+        logger.info(f"Loading all CSV files in {directory_path}")
+
+    except Exception as e:
+        logger.error(f"Error while loading all CSV files in {directory_path}: {e}")
+        raise
+
+    try:
+        # Iterate over all files in the directory
+        for file_name in os.listdir(directory_path):
+            # Check if the file is a CSV
+            if file_name.endswith(".csv"):
+                insert_data_to_table(
+                    postgres_conn_id=postgres_conn_id,
+                    db_name=db_name,
+                    schema_name=schema_name,
+                    table_name=table_name,
+                    columns_table=columns_table,
+                    airflow_home=airflow_home,
+                    location_data=location_data,
+                    sublocation_data=sublocation_data,
+                    file_name=file_name.replace(".csv", ""),
+                    data_type=data_type,
+                )
+        logger.info(f"All CSV files in {directory_path} loaded")
+
+    except Exception as e:
+        logger.error(f"Error while loading all CSV files in {directory_path}: {e}")
         raise
