@@ -30,9 +30,9 @@ default_args = {
 #######################
 
 dag = DAG(
-    dag_id="workflow_ETL",
-    description="workflow_ETL",
-    start_date=datetime(2023, 9, 20, 8, 0, 0),
+    dag_id="workflow_load_csv_data",
+    description="workflow_load_csv_data",
+    start_date=datetime(2023, 10, 10, 10, 0, 0),
     schedule_interval=config.SCHEDULE_INTERVAL_ONCE,  # SCHEDULE_INTERVAL_HOURLY or SCHEDULE_INTERVAL_ONCE
     concurrency=5,
     max_active_runs=1,
@@ -55,7 +55,7 @@ start_pipeline = DummyOperator(
 # ? 4.2. Loading data
 
 with TaskGroup(
-    "load_data",
+    "load_all_csv_data",
     dag=dag,
 ) as load_data:
     load_bike_data = PythonOperator(
