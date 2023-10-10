@@ -18,6 +18,8 @@ def insert_data_to_table(
     sublocation_data: str,
     file_name: str,
     data_type: Optional[str] = None,
+    date: Optional[str] = None,
+    hour: Optional[str] = None,
 ) -> None:
     """
     This function inserts the bike or charging station data into a table in the database.
@@ -36,9 +38,11 @@ def insert_data_to_table(
         None
     """
     try:
-        now = datetime.now()
-        date = now.strftime("%Y%m%d")
-        hour = now.strftime("%H")
+        # If date and hour are not provided, use the current date and hour
+        if not date or not hour:
+            now = datetime.now()
+            date = now.strftime("%Y%m%d")
+            hour = now.strftime("%H")
 
         hook = PostgresHook(postgres_conn_id=postgres_conn_id)
         file_full_name = (
@@ -223,7 +227,7 @@ def load_all_csv_files(
         None
     """
     try:
-        directory_path = os.path.join(airflow_home, location_data, sublocation_data)
+        directory_path = airflow_home + location_data + sublocation_data
         logger.info(f"Loading all CSV files in {directory_path}")
 
     except Exception as e:
@@ -235,6 +239,14 @@ def load_all_csv_files(
         for file_name in os.listdir(directory_path):
             # Check if the file is a CSV
             if file_name.endswith(".csv"):
+                # Extracting date and hour from the file name
+                parts = file_name.split("_")
+                extracted_date = parts[0]
+                extracted_hour = parts[1]
+
+                # Removing the first date_hour part from the file name
+                relevant_file_name = f"{'_'.join(parts[2:])}".replace(".csv", "")
+
                 insert_data_to_table(
                     postgres_conn_id=postgres_conn_id,
                     db_name=db_name,
@@ -244,8 +256,10 @@ def load_all_csv_files(
                     airflow_home=airflow_home,
                     location_data=location_data,
                     sublocation_data=sublocation_data,
-                    file_name=file_name.replace(".csv", ""),
+                    file_name=relevant_file_name,
                     data_type=data_type,
+                    date=extracted_date,  # passing the extracted date
+                    hour=extracted_hour,  # passing the extracted hour
                 )
         logger.info(f"All CSV files in {directory_path} loaded")
 
