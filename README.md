@@ -185,6 +185,20 @@ docker-compose down --volumes --rmi all
 
 And then start again...
 
+
+#### 11. Useful commands
+    
+- To see the logs of a specific container:
+```
+docker logs -f <container_name>
+```
+
+- To see the dag list
+```
+docker exec -it luxmobi-airflow-webserver-1 airflow list_dags
+```
+
+
 #### More info
 
 For more info, please visit:
