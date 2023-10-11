@@ -183,6 +183,12 @@ In case you need to reinstall everything again, you just need to run:
 docker-compose down --volumes --rmi all
 ```
 
+Or, if you want to prune everything:
+
+```
+docker system prune
+```
+
 And then start again...
 
 
@@ -195,7 +201,7 @@ docker logs -f <container_name>
 
 - To see the dag list
 ```
-docker exec -it luxmobi-airflow-webserver-1 airflow list_dags
+docker exec -it luxmobi-airflow-webserver-1 airflow dags list
 ```
 
 
