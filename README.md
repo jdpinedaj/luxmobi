@@ -55,7 +55,7 @@ It is important to note that this workflow includes, among others, the execution
 
 - **workflow_ETL**: This workflow performs the ETL process for each data source. It is executed every day at 00:00, and it is necessary to mention that the start_date of the DAG has to be set to the current date for the first time it is executed, as mentioned in the file itself.
 
-- **workflow_load_csv_data**: In case the airflow server is down for some reason, this workflow can be executed to load the data from the CSV files that were already created by the previous workflow. It is important to note that this workflow should be executed only once, as a backup solution.
+- **workflow_load_csv_data**: In case the airflow server is down for some reason, this workflow can be executed to load the data from the CSV files that were already created by the previous workflow. It is important to note that this workflow should be executed only once, as a backup solution, in case the airflow server is down for some reason and it is needed to clone the repository and mount the containers again.
 
 - **workflow_integration_db**: This workflow performs the integration of the data from the previous MySQL database to the current PostgreSQL database. It is important to note that this workflow should be executed only once, as a backup solution. And still has to be tested.
 
@@ -110,13 +110,18 @@ echo -e "AIRFLOW_UID=$(id -u)" > .env
 
 #### 3. Initialize the database
 
-First, start docker desktop:
+First, start docker desktop. 
+
+- On Windows, you just need to start Docker Desktop.
+
+
+- On Linux, you need to enable docker-desktop service:
     
 ```
 systemctl --user enable docker-desktop
 ```
 
-On all operating systems, you need to run database migrations and create the first user account. To do it, run.
+Then, on all operating systems, you need to run database migrations and create the first user account. To do it, run.
 
 ```
 docker-compose up -d airflow-init
@@ -190,6 +195,36 @@ docker system prune
 ```
 
 And then start again...
+
+#### 12. In case the DAGS are not visible in the webserver
+
+In case you can't see the DAGS in the UI, you can try to run the following command to check if the DAGS are there:
+```
+docker exec -it luxmobi-airflow-webserver-1 airflow dags list
+```
+
+Also, you can try to access the webserver container:
+```
+docker exec -it luxmobi-airflow-webserver-1 bash
+```
+
+Then, you have to navigate to the DAGS folder. First run the following to check the files in the current directory:
+```
+ls -l
+```
+
+Then, navigate to the folder dags:
+```
+cd dags
+```
+and then, again
+```
+ls -l
+```
+
+If you can see the DAGS, then it is better to clone the repository again and start again.
+
+In case you follow this solution, it is necessary to manually copy-paste the CSV files from the previous run into the new repository, and then run the `workflow_load_csv_data` workflow after creating the tables, with the aim of loading the data from the CSV files that were already created by the previous workflow.
 
 
 #### 11. Useful commands

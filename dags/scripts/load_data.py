@@ -89,14 +89,14 @@ def insert_data_to_table(
                     elif data_type == "stops_public_transport":
                         date = values[0]
                         hour = values[1]
-                        name = values[2]
+                        name = values[2].replace(",", "").replace("'", "")
                         line = values[3]
                         catOut = values[4]
                         cls = values[5]
                         catOutS = values[6]
                         catOutL = values[7]
                         extid = values[8]
-                        bus_stop = values[9]
+                        bus_stop = values[9].replace(",", "").replace("'", "")
                         latitude = values[10]
                         longitude = values[11]
                         weight = values[12]
@@ -116,12 +116,12 @@ def insert_data_to_table(
                         catCode = values[7]
                         cls = values[8]
                         operatorCode = values[9]
-                        operator = values[10]
+                        operator = values[10].replace(",", "")
                         busName = values[11]
                         type = values[12]
-                        stop = values[13]
+                        stop = values[13].replace(",", "")
                         stopExtId = values[14]
-                        direction = values[15]
+                        direction = values[15].replace(",", "")
                         trainNumber = values[16]
                         trainCategory = values[17]
 
@@ -157,7 +157,7 @@ def insert_data_to_table(
                         hour = values[1]
                         name = values[2]
                         available = values[3]
-                        total = values[4]
+                        total = values[4].replace("/", "")
                         occupancy = values[5]
                         trend = values[6]
 
@@ -167,7 +167,7 @@ def insert_data_to_table(
                         date = values[0]
                         hour = values[1]
                         place_id = values[2]
-                        name = values[3]
+                        name = values[3].replace("'", "")
                         latitude = values[4]
                         longitude = values[5]
                         city = values[6]
