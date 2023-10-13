@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS {{ params.table_name }} (
     stop VARCHAR(255) NOT NULL,
     stopExtId INT NOT NULL,
     direction VARCHAR(255) NOT NULL,
-    trainNumber INT NOT NULL,
+    trainNumber VARCHAR(255) NOT NULL,
     trainCategory VARCHAR(255) NOT NULL
 );
 
