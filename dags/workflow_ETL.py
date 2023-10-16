@@ -42,7 +42,7 @@ dag = DAG(
     dag_id="workflow_ETL",
     description="workflow_ETL",
     #! The next start_date should be updated to the current date for the first run
-    start_date=datetime(2023, 10, 10, 10, 0, 0),
+    start_date=datetime(2023, 10, 16, 10, 0, 0),
     schedule_interval=config.SCHEDULE_INTERVAL_HOURLY,  # SCHEDULE_INTERVAL_HOURLY or SCHEDULE_INTERVAL_ONCE
     concurrency=5,
     max_active_runs=1,

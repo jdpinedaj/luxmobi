@@ -1191,7 +1191,7 @@ def extraction_gpt_data(
         )
 
         # Delete the cache
-        # shutil.rmtree(dir_path_gpt + timestr)
+        shutil.rmtree(dir_path_gpt + timestr)
 
         logger.info(f"Data retrieved in extraction_gpt_data")
 
