@@ -51,7 +51,6 @@ Finally, all the resources are stored in a [GitHub](https://github.com/jdpinedaj
 There are four workflows in the data portal:
 
 - **workflow_create_tables**: This workflow creates the tables in the database. This is the first workflow that should be executed, and it is executed only once.
-It is important to note that this workflow includes, among others, the execution of the file `sql/create_schemas.sql`, which creates the schemas in the database. It is necessary to comment one line in this file to execute it successfully for the first time, as it is explained in the file itself.
 
 - **workflow_ETL**: This workflow performs the ETL process for each data source. It is executed every day at 00:00, and it is necessary to mention that the start_date of the DAG has to be set to the current date for the first time it is executed, as mentioned in the file itself.
 
@@ -59,25 +58,6 @@ It is important to note that this workflow includes, among others, the execution
 
 - **workflow_integration_db**: This workflow performs the integration of the data from the previous MySQL database to the current PostgreSQL database. It is important to note that this workflow should be executed only once, as a backup solution. And still has to be tested.
 
-<!-- ---
-## Connecting to the PostgreSQL database
-
-Using ngrok to expose the PostgreSQL database to the internet:
-
-```
-ngrok tcp 5432
-```
-
-Then, use the host and port provided by ngrok to connect to the database using DBeaver or any other tool.
-
-Example of ngrok output:
-![ngrok output](readme-resources/ngrok_example.jpeg)
-
-Example of DBeaver connection:
-![DBeaver connection](readme-resources/dbeaver_example.png)
-
-
- -->
 
 ---
 
@@ -106,7 +86,6 @@ On Linux, the quick-start needs to know your host user id and needs to have grou
 mkdir -p ./dags ./logs ./plugins ./config
 echo -e "AIRFLOW_UID=$(id -u)" > .env
 ```
-
 
 #### 3. Initialize the database
 
@@ -179,7 +158,6 @@ docker exec -it luxmobi-postgres-1 psql -U nipi -d luxmobi -c "CREATE ROLE airfl
 docker exec -it luxmobi-postgres-1 psql -U nipi -d luxmobi -c "CREATE DATABASE airflow;"
 ```
 
-
 #### 10. Reseting Docker to start again
 
 In case you need to reinstall everything again, you just need to run:
@@ -196,7 +174,7 @@ docker system prune
 
 And then start again...
 
-#### 12. In case the DAGS are not visible in the webserver
+#### 11. In case the DAGS are not visible in the webserver
 
 In case you can't see the DAGS in the UI, you can try to run the following command to check if the DAGS are there:
 ```
@@ -227,7 +205,7 @@ If you can see the DAGS, then it is better to clone the repository again and sta
 In case you follow this solution, it is necessary to manually copy-paste the CSV files from the previous run into the new repository, and then run the `workflow_load_csv_data` workflow after creating the tables, with the aim of loading the data from the CSV files that were already created by the previous workflow.
 
 
-#### 11. Useful commands
+#### 12. Useful commands
     
 - To see the logs of a specific container:
 ```
