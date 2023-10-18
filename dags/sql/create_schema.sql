@@ -6,8 +6,18 @@ CREATE SCHEMA IF NOT EXISTS {{ params.schema_name }};
 
 
 -- -- Revoke privileges for the regular_user role on the luxmobi database
---?  This line should be commented out if the database is not created yet
-REVOKE ALL PRIVILEGES ON DATABASE luxmobi FROM regular_user;
+-- --?  This line should be commented out if the database is not created yet
+-- REVOKE ALL PRIVILEGES ON DATABASE luxmobi FROM regular_user;
+
+
+-- Revoke privileges for the regular_user role on the luxmobi database conditionally
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'luxmobi') THEN
+        EXECUTE 'REVOKE ALL PRIVILEGES ON DATABASE luxmobi FROM regular_user';
+    END IF;
+END
+$$ LANGUAGE plpgsql;
 
 
 -- Remove the roles if they exist
