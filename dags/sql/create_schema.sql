@@ -8,7 +8,8 @@ CREATE SCHEMA IF NOT EXISTS {{ params.schema_name }};
 -- Revoke privileges for the regular_user role on the luxmobi database conditionally
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'luxmobi') THEN
+    IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'luxmobi') AND 
+       EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'regular_user') THEN
         EXECUTE 'REVOKE ALL PRIVILEGES ON DATABASE luxmobi FROM regular_user';
     END IF;
 END
