@@ -27,7 +27,7 @@
 
 #! New version
 
-FROM apache/airflow:2.6.0
+FROM apache/airflow:2.3.2
 
 # User root to install necessary libraries
 USER root

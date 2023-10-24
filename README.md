@@ -4,12 +4,12 @@
 ![badge2](https://img.shields.io/badge/orchestrator-Airflow-brightgreen.svg)
 ![badge3](https://img.shields.io/badge/containerization-Docker-red.svg)
 
-## General
+## 📑 General
 
 This repository is associated to the data portal of the University of Luxembourg managed by the [MobiLab](https://mobilab.lu/) research group.
 
 
-## Framework
+## 📂 Framework
 
 The data portal is based on the following framework:
 
@@ -47,7 +47,7 @@ The entire pipeline is containerized using [Docker](https://www.docker.com/), an
 Finally, all the resources are stored in a [GitHub](https://github.com/jdpinedaj/luxmobi) repository.
 
 
-## Workflows
+## 📚 Workflows
 There are four workflows in the data portal:
 
 - **workflow_create_tables**: This workflow creates the tables in the database. This is the first workflow that should be executed, and it is executed only once.
@@ -61,7 +61,7 @@ There are four workflows in the data portal:
 
 ---
 
-## Running Airflow on Docker
+## 💾 Running Airflow on Docker
 
 #### 1. docker-compose.yaml
 
