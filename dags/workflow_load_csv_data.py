@@ -18,7 +18,7 @@ import scripts.config as config
 default_args = {
     "owner": "juan.pineda",
     "depends_on_past": False,
-    "email": ["juan.pineda@uni.lu"],
+    "email": ["juandpineda@gmail.com"],
     "email_on_failure": True,
     "email_on_retry": False,
     "retries": 2,
