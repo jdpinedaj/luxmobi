@@ -169,7 +169,7 @@ docker-compose down --volumes --rmi all
 Or, if you want to prune everything:
 
 ```
-docker system prune
+docker system prune -a
 ```
 
 And then start again...
