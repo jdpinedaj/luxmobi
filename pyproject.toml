@@ -2,7 +2,7 @@
 name = "luxmobi"
 version = "0.1.0"
 description = "Base enviroment for luxmobi"
-authors = ["Juan Pineda-Jaramillo <juan.pineda@uni.lu>"]
+authors = ["Juan Pineda-Jaramillo <juandpineda@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
