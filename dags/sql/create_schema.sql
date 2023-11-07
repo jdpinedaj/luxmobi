@@ -33,3 +33,7 @@ CREATE ROLE regular_user LOGIN PASSWORD 'Mobilab123';
 GRANT CONNECT ON DATABASE {{ params.database_name }} TO regular_user;
 GRANT USAGE ON SCHEMA {{ params.schema_name }} TO regular_user;
 GRANT SELECT ON ALL TABLES IN SCHEMA {{ params.schema_name }} TO regular_user;
+
+-- Setting timeout for the users
+ALTER ROLE regular_user SET statement_timeout = '1h';
+-- ===================================
