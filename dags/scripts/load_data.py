@@ -61,7 +61,7 @@ def insert_data_to_table(
             file_suffix = (
                 f"_raw_{data_type}_data_{i}.csv"
                 if data_type == "traffic_counter"
-                else ".csv"
+                else f"_raw_{data_type}_data.csv"
             )
             file_full_name = (
                 airflow_home
